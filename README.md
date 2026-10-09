@@ -9,7 +9,7 @@ mobile/    Mobile client
 docs/      Product and engineering documentation
 ```
 
-The backend is currently the only implemented client.
+The backend and initial web PWA scaffold are implemented. Mobile remains planned.
 
 ## Development
 
@@ -47,4 +47,29 @@ Create a migration after changing models:
 
 ```bash
 uv run alembic revision --autogenerate -m "describe change"
+```
+
+## Web frontend
+
+The web client is a React + Vite + TypeScript frontend with an installable PWA
+shell.
+
+
+Start the frontend from `web/`:
+
+```bash
+cd web
+pnpm install
+pnpm dev
+```
+
+Open the Vite URL shown in the terminal. The auth UI and API integration will be
+added in the next checkpoints.
+
+Run frontend quality checks from `web/`:
+
+```bash
+pnpm lint
+pnpm format:check
+pnpm build
 ```
