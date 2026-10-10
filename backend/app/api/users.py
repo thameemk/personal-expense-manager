@@ -24,6 +24,7 @@ router = APIRouter(prefix="/api/v1", tags=["users"])
 
 
 class UserCreate(BaseModel):
+    display_name: str | None = Field(default=None, max_length=100)
     email: str = Field(max_length=320)
     password: str = Field(min_length=8, max_length=128)
 
@@ -32,11 +33,20 @@ class UserCreate(BaseModel):
     def normalize_user_email(cls, value: str) -> str:
         return normalize_email(value)
 
+    @field_validator("display_name")
+    @classmethod
+    def normalize_display_name(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        value = value.strip()
+        return value or None
+
 
 class UserResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID
+    display_name: str | None
     email: str
     is_active: bool
 
@@ -49,7 +59,12 @@ class TokenResponse(BaseModel):
 @router.post("/users", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 def register_user(payload: UserCreate, db: Session = Depends(get_db)) -> User:
     try:
-        return register_user_service(db, email=payload.email, password=payload.password)
+        return register_user_service(
+            db,
+            email=payload.email,
+            password=payload.password,
+            display_name=payload.display_name,
+        )
     except DuplicateEmailError:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,

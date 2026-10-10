@@ -38,8 +38,18 @@ def normalize_email(value: str) -> str:
     return email
 
 
-def register_user(db: Session, *, email: str, password: str) -> User:
-    user = User(email=normalize_email(email), password_hash=password_hash.hash(password))
+def register_user(
+    db: Session,
+    *,
+    email: str,
+    password: str,
+    display_name: str | None = None,
+) -> User:
+    user = User(
+        email=normalize_email(email),
+        password_hash=password_hash.hash(password),
+        display_name=display_name,
+    )
     db.add(user)
     try:
         db.commit()
