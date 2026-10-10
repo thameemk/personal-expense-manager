@@ -8,6 +8,8 @@ type AuthFormProps = {
   values: AuthFormValues;
   errors: AuthFormErrors;
   status: string;
+  statusIsError: boolean;
+  isSubmitting: boolean;
   showPassword: boolean;
   isSignup: boolean;
   onModeChange: (mode: AuthMode) => void;
@@ -20,6 +22,8 @@ function AuthForm({
   values,
   errors,
   status,
+  statusIsError,
+  isSubmitting,
   showPassword,
   isSignup,
   onModeChange,
@@ -112,14 +116,14 @@ function AuthForm({
             </>
           )}
 
-          <button className="submit-button" type="submit">
-            <span>{isSignup ? "Create account" : "Log in"}</span>
+          <button className="submit-button" type="submit" disabled={isSubmitting}>
+            <span>{isSubmitting ? "Please wait…" : isSignup ? "Create account" : "Log in"}</span>
             <span className="arrow" aria-hidden="true">
               →
             </span>
           </button>
           <p
-            className={`form-status ${status.startsWith("Check") ? "error" : ""}`}
+            className={`form-status ${statusIsError ? "error" : ""}`}
             role="status"
             aria-live="polite"
           >
