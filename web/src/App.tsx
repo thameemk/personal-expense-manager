@@ -4,8 +4,8 @@ import HomePage from "./features/home/HomePage";
 import AuthPage from "./features/auth/components/AuthPage";
 
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(
-    () => Boolean(localStorage.getItem("ledgerly_access_token")),
+  const [isAuthenticated, setIsAuthenticated] = useState(() =>
+    Boolean(localStorage.getItem("ledgerly_access_token")),
   );
 
   const signOut = useCallback(() => {

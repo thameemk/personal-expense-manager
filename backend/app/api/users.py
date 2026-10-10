@@ -16,9 +16,9 @@ from app.services.identity import (
     authenticate_user,
     create_session,
     normalize_email,
-    register_user as register_user_service,
     revoke_session,
 )
+from app.services.identity import register_user as register_user_service
 
 router = APIRouter(prefix="/api/v1", tags=["users"])
 

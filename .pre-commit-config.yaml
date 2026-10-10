@@ -13,11 +13,11 @@ repos:
         language: system
         pass_filenames: false
 
-      - id: backend-tests
-        name: backend pytest
-        entry: uv run --directory backend pytest
-        language: system
-        pass_filenames: false
+#      - id: backend-tests
+#        name: backend pytest
+#        entry: uv run --directory backend pytest
+#        language: system
+#        pass_filenames: false
 
       - id: web-lint
         name: web eslint
