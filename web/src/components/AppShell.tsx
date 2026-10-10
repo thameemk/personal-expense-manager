@@ -1,17 +1,14 @@
 import { ReactNode } from "react";
 import AppHeader from "./AppHeader";
 
-type AppShellProps = {
-  children: ReactNode;
-  onSignOut: () => void;
-};
+type AppShellProps = { children: ReactNode; onSignOut: () => void };
 
 function AppShell({ children, onSignOut }: AppShellProps) {
   return (
-    <main className="home-page">
+    <div className="min-h-svh bg-muted/50">
       <AppHeader onSignOut={onSignOut} />
-      {children}
-    </main>
+      <main>{children}</main>
+    </div>
   );
 }
 

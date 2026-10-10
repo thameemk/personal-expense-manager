@@ -10,7 +10,7 @@ function AuthPage({ onAuthenticated }: AuthPageProps) {
   const authForm = useAuthForm(onAuthenticated);
 
   return (
-    <main className="auth-shell">
+    <main className="grid min-h-svh lg:grid-cols-2">
       <BrandPanel />
       <AuthForm
         {...authForm}

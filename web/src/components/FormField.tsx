@@ -1,3 +1,6 @@
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+
 type FormFieldProps = {
   id: string;
   label: string;
@@ -20,17 +23,21 @@ function FormField({
   onChange,
 }: FormFieldProps) {
   return (
-    <div className={`field ${error ? "invalid" : ""}`}>
-      <label htmlFor={id}>{label}</label>
-      <input
+    <div className="grid gap-2">
+      <Label htmlFor={id}>{label}</Label>
+      <Input
         id={id}
         type={type}
         value={value}
         autoComplete={autoComplete ?? id}
         placeholder={placeholder}
+        aria-invalid={Boolean(error)}
+        aria-describedby={error ? `${id}-error` : undefined}
         onChange={(event) => onChange(event.target.value)}
       />
-      <small className="field-error">{error}</small>
+      <p id={`${id}-error`} className="min-h-4 text-xs text-destructive">
+        {error}
+      </p>
     </div>
   );
 }

@@ -54,6 +54,18 @@ uv run alembic revision --autogenerate -m "describe change"
 The web client is a React + Vite + TypeScript frontend with an installable PWA
 shell.
 
+The UI uses shadcn/ui components in `web/src/components/ui` with Tailwind CSS v4.
+Use those components for controls and cards, Tailwind utilities for layout, and
+the semantic theme tokens in `web/src/styles.css` for colors. Keep custom CSS
+limited to theme and base styles. The app currently uses a light theme only;
+do not add dark theme styles or automatic system theme switching.
+
+Add more shadcn components from `web/`:
+
+```bash
+pnpm dlx shadcn@latest add dialog
+```
+
 
 Start the frontend from `web/`:
 

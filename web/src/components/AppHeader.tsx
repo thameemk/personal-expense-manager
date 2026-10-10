@@ -1,21 +1,22 @@
 import BrandMark from "./BrandMark";
+import { Button } from "@/components/ui/button";
 
-type AppHeaderProps = {
-  onSignOut: () => void;
-};
+type AppHeaderProps = { onSignOut: () => void };
 
 function AppHeader({ onSignOut }: AppHeaderProps) {
   return (
-    <header className="home-header">
-      <div className="home-brand">
-        <BrandMark />
-        <span>ledgerly</span>
+    <header className="border-b bg-background px-6 py-6 lg:px-24">
+      <div className="mx-auto flex max-w-6xl items-center justify-between gap-4">
+        <div className="flex items-center gap-2.5 text-lg font-bold">
+          <BrandMark />
+          <span>ledgerly</span>
+        </div>
+        <nav aria-label="Main navigation">
+          <Button variant="outline" type="button" onClick={onSignOut}>
+            Sign out
+          </Button>
+        </nav>
       </div>
-      <nav className="home-menu" aria-label="Main navigation">
-        <button className="sign-out-button" type="button" onClick={onSignOut}>
-          Sign out
-        </button>
-      </nav>
     </header>
   );
 }
