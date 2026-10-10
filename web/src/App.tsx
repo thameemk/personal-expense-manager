@@ -1,5 +1,7 @@
+import AuthPage from "./features/auth/components/AuthPage";
+
 function App() {
-    return <main>Ledgerly</main>;
+  return <AuthPage />;
 }
 
 export default App;

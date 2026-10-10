@@ -63,8 +63,7 @@ pnpm install
 pnpm dev
 ```
 
-Open the Vite URL shown in the terminal. The auth UI and API integration will be
-added in the next checkpoints.
+Open the Vite URL shown in the terminal.
 
 Run frontend quality checks from `web/`:
 
