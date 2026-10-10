@@ -5,7 +5,7 @@ import { AuthFormErrors, AuthFormValues, AuthMode } from "../auth.types";
 
 const emptyValues: AuthFormValues = { name: "", email: "", password: "", terms: false };
 
-export function useAuthForm() {
+export function useAuthForm(onAuthenticated: () => void) {
   const [mode, setMode] = useState<AuthMode>("signup");
   const [values, setValues] = useState<AuthFormValues>(emptyValues);
   const [errors, setErrors] = useState<AuthFormErrors>({});
@@ -53,6 +53,7 @@ export function useAuthForm() {
       const token = await loginUser({ email: values.email.trim(), password: values.password });
       localStorage.setItem("ledgerly_access_token", token.access_token);
       setStatus(mode === "signup" ? "Your account is ready." : "You’re signed in.");
+      onAuthenticated();
     } catch (error) {
       setStatusIsError(true);
       setStatus(error instanceof Error ? error.message : "Unable to connect to the API.");

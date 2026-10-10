@@ -2,8 +2,12 @@ import { useAuthForm } from "../hooks/useAuthForm";
 import AuthForm from "./AuthForm";
 import BrandPanel from "./BrandPanel";
 
-function AuthPage() {
-  const authForm = useAuthForm();
+type AuthPageProps = {
+  onAuthenticated: () => void;
+};
+
+function AuthPage({ onAuthenticated }: AuthPageProps) {
+  const authForm = useAuthForm(onAuthenticated);
 
   return (
     <main className="auth-shell">

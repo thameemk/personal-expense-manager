@@ -48,4 +48,16 @@ button { cursor: pointer; }
 .form-status.error { color: #c2413a; }
 .security-note { margin: 40px 0 0; color: #94a3b8; font-size: 11px; text-align: center; }
 .lock { display: inline-block; margin-right: 5px; color: #64748b; font-size: 15px; vertical-align: -2px; }
+.home-page { min-height: 100vh; color: #172033; background: #f8fafc; }
+.home-header { display: flex; align-items: center; justify-content: space-between; padding: 24px clamp(22px, 7vw, 112px); border-bottom: 1px solid #e2e8f0; background: #fff; }
+.home-brand { display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 700; }
+.home-brand .brand-mark { width: 30px; height: 30px; margin: 0; border-radius: 7px; font-size: 20px; }
+.sign-out-button { padding: 9px 14px; border: 1px solid #dbe3ed; border-radius: 7px; color: #475569; background: #fff; font-size: 12px; font-weight: 600; }
+.home-content { width: min(100% - 44px, 920px); margin: 0 auto; padding: clamp(64px, 10vw, 120px) 0; }
+.home-content h1 { margin: 0; color: #172033; font-size: clamp(40px, 6vw, 64px); font-weight: 600; letter-spacing: -.055em; }
+.home-copy { margin: 18px 0 42px; color: #64748b; font-size: 16px; }
+.home-card { max-width: 520px; padding: 28px; border: 1px solid #dce7f7; border-radius: 12px; background: #fff; box-shadow: 0 10px 30px rgba(37, 99, 235, .06); }
+.home-card-label { color: #2563eb; font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
+.home-card h2 { margin: 14px 0 8px; font-size: 22px; font-weight: 600; }
+.home-card p { margin: 0; color: #64748b; font-size: 14px; line-height: 1.6; }
 @media (max-width: 780px) { .auth-shell { display: block; } .brand-panel { display: none; } .form-panel { min-height: 100vh; padding: 28px 22px 40px; } .mobile-brand { display: flex; } .form-wrap { width: min(100%, 420px); } }
