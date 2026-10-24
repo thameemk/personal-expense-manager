@@ -17,12 +17,12 @@ import {useState} from "react";
 import {Empty} from "../../components/Empty.tsx";
 import {InfiniteScroll} from "../../components/InfiniteScroll.tsx";
 import {Section} from "../../components/Section.tsx";
-import {fmt, total, type Expense, type Group} from "../../lib/money.ts";
+import {fmt, type Group} from "../../lib/money.ts";
 import {colorOf} from "../../lib/util.ts";
 import {NewGroupDialog} from "./NewGroupDialog.tsx";
 
-export function GroupListPage({groups, expenses, onOpen, onCreate, paging}: {
-    groups: Group[]; expenses: Expense[]; onOpen: (id: string) => void;
+export function GroupListPage({groups, onOpen, onCreate, paging}: {
+    groups: Group[]; onOpen: (id: string) => void;
     onCreate: (g: { name: string; currency: string }) => void | Promise<void>;
     paging: { loadMore: () => void; retry: () => void; hasMore: boolean; loading: boolean; error: string };
 }) {
@@ -32,7 +32,7 @@ export function GroupListPage({groups, expenses, onOpen, onCreate, paging}: {
             <Card sx={{mb: 3, bgcolor: "primary.main", color: "primary.contrastText", border: 0}}>
                 <CardContent>
                     <Typography variant="body2" sx={{opacity: 0.7}}>Total spent</Typography>
-                    <Typography variant="h4" fontWeight={700}>{fmt(total(expenses))}</Typography>
+                    <Typography variant="h4" fontWeight={700}>{fmt(groups.reduce((s, g) => s + g.cents, 0))}</Typography>
                 </CardContent>
             </Card>
             <Section title="Groups">
@@ -48,9 +48,9 @@ export function GroupListPage({groups, expenses, onOpen, onCreate, paging}: {
                                     <ListItemAvatar><Avatar
                                         sx={{bgcolor: colorOf(gr.name)}}>{gr.name[0].toUpperCase()}</Avatar></ListItemAvatar>
                                     <ListItemText primary={gr.name}
-                                                  secondary={`${expenses.filter((e) => e.groupId === gr.id).length} expenses`}
+                                                  secondary={`${gr.count} expenses`}
                                                   slotProps={{primary: {noWrap: true}}} sx={{minWidth: 0, pr: 1}}/>
-                                    <Typography fontWeight={500}>{fmt(total(expenses, gr.id), gr.currency)}</Typography>
+                                    <Typography fontWeight={500}>{fmt(gr.cents, gr.currency)}</Typography>
                                 </ListItemButton>
                             </Box>
                         ))}

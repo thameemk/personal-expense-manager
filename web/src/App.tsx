@@ -62,7 +62,7 @@ function Main({token, onLogout}: { token: string; onLogout: () => void }) {
                                    setToast("Expense deleted");
                                }, fail)}/>
                 ) : (
-                    <GroupListPage groups={groups.items} expenses={expenses.items} paging={groups} onOpen={setOpen}
+                    <GroupListPage groups={groups.items} paging={groups} onOpen={setOpen}
                                    onCreate={(d) => groupsApi.createGroup(token, d.name, d.currency).then((gr) => {
                                        groups.setItems((xs) => [gr, ...xs]);
                                        setOpen(gr.id);

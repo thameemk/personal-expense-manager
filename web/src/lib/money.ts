@@ -1,6 +1,6 @@
 export type Expense = { id: string; groupId: string; description: string; cents: number; date: string };
 
-export type Group = { id: string; name: string; currency: string };
+export type Group = { id: string; name: string; currency: string; cents: number; count: number };
 
 export const fmt = (cents: number, currency = "INR") =>
     (cents / 100).toLocaleString(undefined, {style: "currency", currency});
