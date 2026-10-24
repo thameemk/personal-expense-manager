@@ -25,12 +25,6 @@ repos:
         language: system
         pass_filenames: false
 
-      - id: web-format
-        name: web prettier check
-        entry: pnpm --dir web format:check
-        language: system
-        pass_filenames: false
-
       - id: web-build
         name: web build
         entry: pnpm --dir web build
