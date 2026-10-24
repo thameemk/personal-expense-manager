@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
+from datetime import date as dt_date
 from decimal import Decimal
 
 from sqlalchemy import CheckConstraint, ForeignKey, Index, Numeric, String
@@ -40,6 +40,6 @@ class Expense(TimestampMixin, Base):
     group_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("groups.id", ondelete="CASCADE"))
     description: Mapped[str] = mapped_column(String(255))
     amount: Mapped[Decimal] = mapped_column(Numeric(12, 2))
-    date: Mapped[datetime]
+    date: Mapped[dt_date]
 
     group: Mapped["Group"] = relationship("Group", back_populates="expenses")
