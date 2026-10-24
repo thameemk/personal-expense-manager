@@ -1,16 +1,17 @@
 from __future__ import annotations
 
+from decimal import Decimal
 from uuid import UUID
 
 import pycountry
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, ConfigDict, Field, field_validator
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.api.dependencies import get_current_user
 from app.db.session import get_db
-from app.models import Group, User
+from app.models import Expense, Group, User
 from app.utils.pagination import Page, paginate
 
 router = APIRouter(prefix="/api/v1/groups", tags=["groups"])
@@ -39,6 +40,11 @@ class GroupResponse(BaseModel):
     currency: str
 
 
+class GroupSummary(GroupResponse):
+    total_amount: Decimal
+    expense_count: int
+
+
 def get_owned_group(group_id: UUID, user: User, db: Session) -> Group:
     group = db.get(Group, group_id)
     if group is None or group.owner_id != user.id:
@@ -56,7 +62,7 @@ def create_group(
     return group
 
 
-@router.get("", response_model=Page[GroupResponse])
+@router.get("", response_model=Page[GroupSummary])
 def list_groups(
     cursor: str | None = None,
     limit: int = Query(20, ge=1, le=100),
@@ -64,4 +70,21 @@ def list_groups(
     db: Session = Depends(get_db),
 ):
     stmt = select(Group).where(Group.owner_id == user.id)
-    return paginate(db, stmt, Group.created_at, Group, cursor, limit)
+    page = paginate(db, stmt, Group.created_at, Group, cursor, limit)
+    totals = {
+        gid: (amount, count)
+        for gid, amount, count in db.execute(
+            select(Expense.group_id, func.sum(Expense.amount), func.count())
+            .where(Expense.group_id.in_([g.id for g in page["items"]]))
+            .group_by(Expense.group_id)
+        )
+    }
+    page["items"] = [
+        GroupSummary(
+            **GroupResponse.model_validate(g).model_dump(),
+            total_amount=totals.get(g.id, (Decimal(0), 0))[0],
+            expense_count=totals.get(g.id, (Decimal(0), 0))[1],
+        )
+        for g in page["items"]
+    ]
+    return page
