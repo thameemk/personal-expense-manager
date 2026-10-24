@@ -15,13 +15,16 @@ import {
 } from "@mui/material";
 import {useState} from "react";
 import {Empty} from "../../components/Empty.tsx";
+import {InfiniteScroll} from "../../components/InfiniteScroll.tsx";
 import {Section} from "../../components/Section.tsx";
 import {fmt, total, type Expense, type Group} from "../../lib/money.ts";
 import {colorOf} from "../../lib/util.ts";
 import {NewGroupDialog} from "./NewGroupDialog.tsx";
 
-export function GroupListPage({groups, expenses, onOpen, onCreate}: {
-    groups: Group[]; expenses: Expense[]; onOpen: (id: string) => void; onCreate: (g: Group) => void;
+export function GroupListPage({groups, expenses, onOpen, onCreate, paging}: {
+    groups: Group[]; expenses: Expense[]; onOpen: (id: string) => void;
+    onCreate: (g: { name: string; currency: string }) => void;
+    paging: { loadMore: () => void; hasMore: boolean; error: string };
 }) {
     const [creating, setCreating] = useState(false);
     return (
@@ -46,13 +49,14 @@ export function GroupListPage({groups, expenses, onOpen, onCreate}: {
                                     <ListItemText primary={gr.name}
                                                   secondary={`${expenses.filter((e) => e.groupId === gr.id).length} expenses`}
                                                   slotProps={{primary: {noWrap: true}}} sx={{minWidth: 0, pr: 1}}/>
-                                    <Typography fontWeight={500}>{fmt(total(expenses, gr.id))}</Typography>
+                                    <Typography fontWeight={500}>{fmt(total(expenses, gr.id), gr.currency)}</Typography>
                                 </ListItemButton>
                             </Box>
                         ))}
                     </List>
                 )}
             </Section>
+            <InfiniteScroll onMore={paging.loadMore} hasMore={paging.hasMore} count={groups.length} error={paging.error}/>
             <Box sx={{height: 72}}/>
             <Fab color="primary" variant="extended" onClick={() => setCreating(true)}
                  sx={{position: "fixed", right: 24, bottom: 24}}>

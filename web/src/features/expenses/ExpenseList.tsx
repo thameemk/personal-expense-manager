@@ -26,7 +26,9 @@ function byMonth(expenses: Expense[]): [string, Expense[]][] {
     return [...months];
 }
 
-export function ExpenseList({expenses, onDelete}: { expenses: Expense[]; onDelete: (id: string) => void }) {
+export function ExpenseList({expenses, currency, onDelete}: {
+    expenses: Expense[]; currency: string; onDelete: (id: string) => void
+}) {
     if (expenses.length === 0)
         return (
             <Section title="Expenses">
@@ -36,7 +38,7 @@ export function ExpenseList({expenses, onDelete}: { expenses: Expense[]; onDelet
     return (
         <>
             {byMonth(expenses).map(([ym, items]) => (
-                <Section key={ym} title={`${monthLabel(ym)} · ${fmt(total(items))}`}>
+                <Section key={ym} title={`${monthLabel(ym)} · ${fmt(total(items), currency)}`}>
                     <List disablePadding>
                         {items.map((e, i) => (
                             <Box key={e.id}>
@@ -51,7 +53,7 @@ export function ExpenseList({expenses, onDelete}: { expenses: Expense[]; onDelet
                                     </ListItemAvatar>
                                     <ListItemText primary={e.description} secondary={day(e.date)}
                                                   slotProps={{primary: {noWrap: true}}} sx={{minWidth: 0}}/>
-                                    <Typography fontWeight={500} sx={{mr: 4}}>{fmt(e.cents)}</Typography>
+                                    <Typography fontWeight={500} sx={{mr: 4}}>{fmt(e.cents, currency)}</Typography>
                                 </ListItem>
                             </Box>
                         ))}
