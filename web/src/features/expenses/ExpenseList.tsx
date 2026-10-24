@@ -57,7 +57,7 @@ export function ExpenseList({expenses, currency, loading, onDelete}: {
                         {items.map((e, i) => (
                             <Box key={e.id}>
                                 {i > 0 && <Divider component="li"/>}
-                                <ListItem secondaryAction={<IconButton edge="end" aria-label="Delete"
+                                <ListItem secondaryAction={<IconButton edge="end" aria-label={`Delete ${e.description}`}
                                                                        disabled={deleting.has(e.id)} onClick={() => remove(e.id)}><DeleteOutlineIcon/></IconButton>}>
                                     <ListItemAvatar>
                                         <Avatar sx={{

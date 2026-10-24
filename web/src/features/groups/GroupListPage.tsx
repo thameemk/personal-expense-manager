@@ -57,7 +57,7 @@ export function GroupListPage({groups, expenses, onOpen, onCreate, paging}: {
                     </List>
                 )}
             </Section>
-            <InfiniteScroll onMore={paging.loadMore} onRetry={paging.retry} hasMore={paging.hasMore} count={groups.length} error={paging.error}/>
+            <InfiniteScroll onMore={paging.loadMore} onRetry={paging.retry} hasMore={paging.hasMore} loading={paging.loading} count={groups.length} error={paging.error}/>
             <Box sx={{height: 72}}/>
             <Fab color="primary" variant="extended" onClick={() => setCreating(true)}
                  sx={{position: "fixed", right: 24, bottom: 24}}>

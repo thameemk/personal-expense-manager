@@ -22,7 +22,7 @@ export function GroupPage({g, expenses, onAdd, onDelete, paging}: {
                 </CardContent>
             </Card>
             <ExpenseList expenses={mine} currency={g.currency} loading={paging.loading || !!paging.error} onDelete={onDelete}/>
-            <InfiniteScroll onMore={paging.loadMore} onRetry={paging.retry} hasMore={paging.hasMore} count={expenses.length} error={paging.error}/>
+            <InfiniteScroll onMore={paging.loadMore} onRetry={paging.retry} hasMore={paging.hasMore} loading={paging.loading} count={expenses.length} error={paging.error}/>
             <Box sx={{height: 72}}/>
             <Fab color="primary" variant="extended" onClick={() => setAdding(true)}
                  sx={{position: "fixed", right: 24, bottom: 24}}>
