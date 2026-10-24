@@ -71,14 +71,17 @@ def list_groups(
 ):
     stmt = select(Group).where(Group.owner_id == user.id)
     page = paginate(db, stmt, Group.created_at, Group, cursor, limit)
-    totals = {
-        gid: (amount, count)
-        for gid, amount, count in db.execute(
+    ids = [g.id for g in page["items"]]
+    rows = (
+        db.execute(
             select(Expense.group_id, func.sum(Expense.amount), func.count())
-            .where(Expense.group_id.in_([g.id for g in page["items"]]))
+            .where(Expense.group_id.in_(ids))
             .group_by(Expense.group_id)
         )
-    }
+        if ids
+        else []
+    )
+    totals = {gid: (amount, count) for gid, amount, count in rows}
     page["items"] = [
         GroupSummary(
             **GroupResponse.model_validate(g).model_dump(),
