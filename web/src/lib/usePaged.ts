@@ -10,12 +10,25 @@ export function usePaged<T extends {
     const [hasMore, setHasMore] = useState(key !== null);
     const [loading, setLoading] = useState(key !== null);
     const [error, setError] = useState("");
+    const [prevKey, setPrevKey] = useState(key);
     const fetchRef = useRef(fetchPage);
-    fetchRef.current = fetchPage;
     const next = useRef<string>(undefined);
     const done = useRef(true);
     const busy = useRef(false);
     const gen = useRef(0); // ignores responses that belong to a previous key
+
+    // new list: drop the old state during render, so no stale rows are ever painted
+    if (key !== prevKey) {
+        setPrevKey(key);
+        setItems([]);
+        setError("");
+        setHasMore(key !== null);
+        setLoading(key !== null);
+    }
+
+    useEffect(() => {
+        fetchRef.current = fetchPage;
+    });
 
     const loadMore = useCallback(() => {
         if (busy.current || done.current) return;
@@ -52,10 +65,6 @@ export function usePaged<T extends {
         busy.current = false;
         next.current = undefined;
         done.current = key === null;
-        setItems([]);
-        setError("");
-        setHasMore(key !== null);
-        setLoading(key !== null);
         loadMore();
     }, [key, loadMore]);
 
