@@ -5,7 +5,7 @@ from decimal import Decimal
 from typing import Literal
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session, contains_eager
@@ -90,3 +90,20 @@ def list_expenses(
     page = paginate(db, stmt, Expense.date, Expense, cursor, limit)
     page["items"] = [to_response(e, with_group=bool(include)) for e in page["items"]]
     return page
+
+
+@router.delete("/{expense_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_expense(
+    expense_id: UUID,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> None:
+    expense = db.scalar(
+        select(Expense)
+        .join(Expense.group)
+        .where(Expense.id == expense_id, Group.owner_id == user.id)
+    )
+    if expense is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Expense not found")
+    db.delete(expense)
+    db.commit()
