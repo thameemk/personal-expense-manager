@@ -7,7 +7,8 @@ export function usePaged<T extends {
     id: string
 }>(fetchPage: (cursor?: string) => Promise<Page<T>>, key: string | null) {
     const [items, setItems] = useState<T[]>([]);
-    const [hasMore, setHasMore] = useState(false);
+    const [hasMore, setHasMore] = useState(key !== null);
+    const [loading, setLoading] = useState(key !== null);
     const [error, setError] = useState("");
     const fetchRef = useRef(fetchPage);
     fetchRef.current = fetchPage;
@@ -19,6 +20,7 @@ export function usePaged<T extends {
     const loadMore = useCallback(() => {
         if (busy.current || done.current) return;
         busy.current = true;
+        setLoading(true);
         const g = gen.current;
         fetchRef.current(next.current)
             .then((p) => {
@@ -39,7 +41,9 @@ export function usePaged<T extends {
                 setHasMore(false);
             })
             .finally(() => {
-                if (g === gen.current) busy.current = false;
+                if (g !== gen.current) return;
+                busy.current = false;
+                setLoading(false);
             });
     }, []);
 
@@ -51,8 +55,17 @@ export function usePaged<T extends {
         setItems([]);
         setError("");
         setHasMore(key !== null);
+        setLoading(key !== null);
         loadMore();
     }, [key, loadMore]);
 
-    return {items, setItems, hasMore, error, loadMore};
+    // after a failed page: clear the error and try that page again
+    const retry = useCallback(() => {
+        setError("");
+        done.current = false;
+        setHasMore(true);
+        loadMore();
+    }, [loadMore]);
+
+    return {items, setItems, hasMore, loading, error, loadMore, retry};
 }

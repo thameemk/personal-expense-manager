@@ -23,8 +23,8 @@ import {NewGroupDialog} from "./NewGroupDialog.tsx";
 
 export function GroupListPage({groups, expenses, onOpen, onCreate, paging}: {
     groups: Group[]; expenses: Expense[]; onOpen: (id: string) => void;
-    onCreate: (g: { name: string; currency: string }) => void;
-    paging: { loadMore: () => void; hasMore: boolean; error: string };
+    onCreate: (g: { name: string; currency: string }) => void | Promise<void>;
+    paging: { loadMore: () => void; retry: () => void; hasMore: boolean; loading: boolean; error: string };
 }) {
     const [creating, setCreating] = useState(false);
     return (
@@ -37,7 +37,8 @@ export function GroupListPage({groups, expenses, onOpen, onCreate, paging}: {
             </Card>
             <Section title="Groups">
                 {groups.length === 0 ? (
-                    <Empty icon={<GroupsIcon fontSize="large"/>} text="Create a group to start tracking"/>
+                    paging.loading || paging.error ? null :
+                        <Empty icon={<GroupsIcon fontSize="large"/>} text="Create a group to start tracking"/>
                 ) : (
                     <List disablePadding>
                         {groups.map((gr, i) => (
@@ -56,14 +57,14 @@ export function GroupListPage({groups, expenses, onOpen, onCreate, paging}: {
                     </List>
                 )}
             </Section>
-            <InfiniteScroll onMore={paging.loadMore} hasMore={paging.hasMore} count={groups.length} error={paging.error}/>
+            <InfiniteScroll onMore={paging.loadMore} onRetry={paging.retry} hasMore={paging.hasMore} count={groups.length} error={paging.error}/>
             <Box sx={{height: 72}}/>
             <Fab color="primary" variant="extended" onClick={() => setCreating(true)}
                  sx={{position: "fixed", right: 24, bottom: 24}}>
                 <AddIcon sx={{mr: 1}}/> New group
             </Fab>
-            {creating && <NewGroupDialog onClose={() => setCreating(false)} onSave={(gr) => {
-                onCreate(gr);
+            {creating && <NewGroupDialog onClose={() => setCreating(false)} onSave={async (gr) => {
+                await onCreate(gr);
                 setCreating(false);
             }}/>}
         </>

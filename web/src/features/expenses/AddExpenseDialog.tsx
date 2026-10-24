@@ -6,7 +6,7 @@ import {today} from "../../lib/util.ts";
 export function AddExpenseDialog({groupId, currency, onSave, onClose}: {
     groupId: string;
     currency: string;
-    onSave: (e: ExpenseDraft) => void;
+    onSave: (e: ExpenseDraft) => void | Promise<void>;
     onClose: () => void
 }) {
     return (

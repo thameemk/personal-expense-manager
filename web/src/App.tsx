@@ -56,7 +56,7 @@ function Main({token, onLogout}: { token: string; onLogout: () => void }) {
                                onAdd={(d) => expensesApi.createExpense(token, d).then((e) => {
                                    expenses.setItems((xs) => [e, ...xs]);
                                    setToast("Expense added");
-                               }, fail)}
+                               })}
                                onDelete={(id) => expensesApi.deleteExpense(token, id).then(() => {
                                    expenses.setItems((xs) => xs.filter((e) => e.id !== id));
                                    setToast("Expense deleted");
@@ -66,7 +66,7 @@ function Main({token, onLogout}: { token: string; onLogout: () => void }) {
                                    onCreate={(d) => groupsApi.createGroup(token, d.name, d.currency).then((gr) => {
                                        groups.setItems((xs) => [gr, ...xs]);
                                        setOpen(gr.id);
-                                   }, fail)}/>
+                                   })}/>
                 )}
             </AppShell>
             <Snackbar open={!!toast} autoHideDuration={3000} onClose={() => setToast("")} message={toast}/>

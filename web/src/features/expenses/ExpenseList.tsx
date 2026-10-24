@@ -11,6 +11,7 @@ import {
     ListItemText,
     Typography
 } from "@mui/material";
+import {useState} from "react";
 import {Empty} from "../../components/Empty.tsx";
 import {Section} from "../../components/Section.tsx";
 import {fmt, total, type Expense} from "../../lib/money.ts";
@@ -26,11 +27,24 @@ function byMonth(expenses: Expense[]): [string, Expense[]][] {
     return [...months];
 }
 
-export function ExpenseList({expenses, currency, onDelete}: {
-    expenses: Expense[]; currency: string; onDelete: (id: string) => void
+export function ExpenseList({expenses, currency, loading, onDelete}: {
+    expenses: Expense[]; currency: string; loading: boolean; onDelete: (id: string) => void | Promise<void>
 }) {
+    const [deleting, setDeleting] = useState<ReadonlySet<string>>(new Set());
+    const remove = async (id: string) => {
+        setDeleting((s) => new Set(s).add(id));
+        try {
+            await onDelete(id);
+        } finally {
+            setDeleting((s) => {
+                const n = new Set(s);
+                n.delete(id);
+                return n;
+            });
+        }
+    };
     if (expenses.length === 0)
-        return (
+        return loading ? null : (
             <Section title="Expenses">
                 <Empty icon={<ReceiptLongIcon fontSize="large"/>} text="No expenses yet. Tap “Add expense”."/>
             </Section>
@@ -44,7 +58,7 @@ export function ExpenseList({expenses, currency, onDelete}: {
                             <Box key={e.id}>
                                 {i > 0 && <Divider component="li"/>}
                                 <ListItem secondaryAction={<IconButton edge="end" aria-label="Delete"
-                                                                       onClick={() => onDelete(e.id)}><DeleteOutlineIcon/></IconButton>}>
+                                                                       disabled={deleting.has(e.id)} onClick={() => remove(e.id)}><DeleteOutlineIcon/></IconButton>}>
                                     <ListItemAvatar>
                                         <Avatar sx={{
                                             bgcolor: "action.selected",
