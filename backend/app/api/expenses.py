@@ -19,13 +19,16 @@ from app.utils.pagination import Page, paginate
 router = APIRouter(prefix="/api/v1/expenses", tags=["expenses"])
 
 
-class ExpenseCreate(BaseModel):
+class ExpenseUpdate(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True)
 
-    group_id: UUID
     description: str = Field(min_length=1, max_length=255)
     amount: Decimal = Field(gt=0, max_digits=12, decimal_places=2)
     date: Date
+
+
+class ExpenseCreate(ExpenseUpdate):
+    group_id: UUID
 
 
 class ExpenseResponse(BaseModel):
@@ -92,12 +95,7 @@ def list_expenses(
     return page
 
 
-@router.delete("/{expense_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_expense(
-    expense_id: UUID,
-    user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-) -> None:
+def get_owned_expense(expense_id: UUID, user: User, db: Session) -> Expense:
     expense = db.scalar(
         select(Expense)
         .join(Expense.group)
@@ -105,5 +103,28 @@ def delete_expense(
     )
     if expense is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Expense not found")
-    db.delete(expense)
+    return expense
+
+
+@router.put("/{expense_id}", response_model=ExpenseResponse, response_model_exclude_unset=True)
+def update_expense(
+    expense_id: UUID,
+    payload: ExpenseUpdate,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> ExpenseResponse:
+    expense = get_owned_expense(expense_id, user, db)
+    for field, value in payload.model_dump().items():
+        setattr(expense, field, value)
+    db.commit()
+    return to_response(expense)
+
+
+@router.delete("/{expense_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_expense(
+    expense_id: UUID,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> None:
+    db.delete(get_owned_expense(expense_id, user, db))
     db.commit()
