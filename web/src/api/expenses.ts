@@ -1,4 +1,4 @@
-import {del, get, post, qs, type Page} from "./client.ts";
+import {del, get, post, put, qs, type Page} from "./client.ts";
 import type {Expense} from "../lib/money.ts";
 
 // the API sends amount as a decimal string ("12.50"); the UI works in integer cents
@@ -19,5 +19,9 @@ export const createExpense = (token: string, d: ExpenseDraft) =>
         group_id: d.groupId, description: d.description, amount: (d.cents / 100).toFixed(2), date: d.date,
     }, token).then(toExpense);
 
+export const updateExpense = (token: string, id: string, d: ExpenseDraft) =>
+    put<ApiExpense>(`/expenses/${id}`, {
+        description: d.description, amount: (d.cents / 100).toFixed(2), date: d.date,
+    }, token).then(toExpense);
 
 export const deleteExpense = (token: string, id: string) => del(`/expenses/${id}`, token);

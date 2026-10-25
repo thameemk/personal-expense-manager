@@ -7,11 +7,13 @@ import type {ExpenseDraft} from "../../api/expenses.ts";
 import {ExpenseList} from "../expenses/ExpenseList.tsx";
 import {fmt, total, type Expense, type Group} from "../../lib/money.ts";
 
-export function GroupPage({g, expenses, onAdd, onDelete, paging}: {
-    g: Group; expenses: Expense[]; onAdd: (e: ExpenseDraft) => void | Promise<void>; onDelete: (id: string) => void | Promise<void>;
+export function GroupPage({g, expenses, onAdd, onEdit, onDelete, paging}: {
+    g: Group; expenses: Expense[]; onAdd: (e: ExpenseDraft) => void | Promise<void>; onEdit: (id: string, e: ExpenseDraft) => void | Promise<void>;
+    onDelete: (id: string) => void | Promise<void>;
     paging: { loadMore: () => void; retry: () => void; hasMore: boolean; loading: boolean; error: string };
 }) {
     const [adding, setAdding] = useState(false);
+    const [editing, setEditing] = useState<Expense>();
     const mine = expenses.filter((e) => e.groupId === g.id).sort((a, b) => b.date.localeCompare(a.date));
     return (
         <>
@@ -21,7 +23,7 @@ export function GroupPage({g, expenses, onAdd, onDelete, paging}: {
                     <Typography variant="h4" fontWeight={700}>{fmt(total(mine), g.currency)}</Typography>
                 </CardContent>
             </Card>
-            <ExpenseList expenses={mine} currency={g.currency} loading={paging.loading || !!paging.error} onDelete={onDelete}/>
+            <ExpenseList expenses={mine} currency={g.currency} loading={paging.loading || !!paging.error} onEdit={setEditing} onDelete={onDelete}/>
             <InfiniteScroll onMore={paging.loadMore} onRetry={paging.retry} hasMore={paging.hasMore} loading={paging.loading} count={expenses.length} error={paging.error}/>
             <Box sx={{height: 72}}/>
             <Fab color="primary" variant="extended" onClick={() => setAdding(true)}
@@ -31,6 +33,10 @@ export function GroupPage({g, expenses, onAdd, onDelete, paging}: {
             {adding && <AddExpenseDialog groupId={g.id} currency={g.currency} onClose={() => setAdding(false)} onSave={async (e) => {
                 await onAdd(e);
                 setAdding(false);
+            }}/>}
+            {editing && <AddExpenseDialog groupId={g.id} currency={g.currency} expense={editing} onClose={() => setEditing(undefined)} onSave={async (e) => {
+                await onEdit(editing.id, e);
+                setEditing(undefined);
             }}/>}
         </>
     );

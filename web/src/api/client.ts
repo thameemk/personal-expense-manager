@@ -28,6 +28,7 @@ async function request<T>(method: string, path: string, body?: unknown, token?: 
 }
 
 export const post = <T>(path: string, body: unknown, token?: string) => request<T>("POST", path, body, token);
+export const put = <T>(path: string, body: unknown, token?: string) => request<T>("PUT", path, body, token);
 export const get = <T>(path: string, token: string) => request<T>("GET", path, undefined, token);
 export const del = (path: string, token: string) => request<void>("DELETE", path, undefined, token);
 

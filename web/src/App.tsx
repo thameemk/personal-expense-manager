@@ -57,6 +57,10 @@ function Main({token, onLogout}: { token: string; onLogout: () => void }) {
                                    expenses.setItems((xs) => [e, ...xs]);
                                    setToast("Expense added");
                                })}
+                               onEdit={(id, d) => expensesApi.updateExpense(token, id, d).then((e) => {
+                                   expenses.setItems((xs) => xs.map((x) => (x.id === id ? e : x)));
+                                   setToast("Expense updated");
+                               })}
                                onDelete={(id) => expensesApi.deleteExpense(token, id).then(() => {
                                    expenses.setItems((xs) => xs.filter((e) => e.id !== id));
                                    setToast("Expense deleted");
