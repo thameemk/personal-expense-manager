@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 from datetime import date as Date
+from datetime import datetime
 from decimal import Decimal
 from typing import Annotated, Literal
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, ConfigDict, Field, field_validator
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session, contains_eager
 
 from app.api.dependencies import get_current_user
@@ -55,6 +56,7 @@ class ExpenseResponse(BaseModel):
     amount: Decimal
     date: Date
     tags: list[str]
+    updated_at: datetime
     group: GroupResponse | None = None  # only with ?include=group
 
 
@@ -69,6 +71,7 @@ def to_response(expense: Expense, with_group: bool = False) -> ExpenseResponse:
         amount=expense.amount,
         date=expense.date,
         tags=[t.name for t in expense.tags],
+        updated_at=expense.updated_at,
         **extra,
     )
 
@@ -135,6 +138,7 @@ def update_expense(
     for field, value in payload.model_dump(exclude={"tags"}).items():
         setattr(expense, field, value)
     set_tags(expense, payload.tags, user, db)
+    expense.updated_at = func.now()  # onupdate alone misses tag-only edits
     db.commit()
     return to_response(expense)
 
