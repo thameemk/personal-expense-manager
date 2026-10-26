@@ -13,6 +13,7 @@ from sqlalchemy import (
     String,
     Table,
     UniqueConstraint,
+    text,
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -25,7 +26,7 @@ class Group(TimestampMixin, Base):
     __tablename__ = "groups"
     __table_args__ = (
         CheckConstraint("currency ~ '^[A-Z]{3}$'", name="ck_groups_currency_format"),
-        Index("ix_groups_owner_id", "owner_id"),
+        Index("ix_groups_owner_id_created_at", "owner_id", text("created_at DESC"), text("id DESC")),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -60,7 +61,7 @@ class Expense(TimestampMixin, Base):
     __tablename__ = "expenses"
     __table_args__ = (
         CheckConstraint("amount > 0", name="ck_expenses_amount_positive"),
-        Index("ix_expenses_group_id_date", "group_id", "date"),
+        Index("ix_expenses_group_id_date", "group_id", text("date DESC"), text("id DESC")),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
