@@ -95,7 +95,15 @@ function Main({token, onLogout}: { token: string; onLogout: () => void }) {
                                }, fail)}/>
                 )}
             </AppShell>
-            {groupDialog && <GroupDialog group={groupDialog} onClose={() => setGroupDialog(null)} onSave={async (d) => {
+            {groupDialog && <GroupDialog group={groupDialog} onClose={() => setGroupDialog(null)}
+                                          onDelete={async () => {
+                                              await groupsApi.deleteGroup(token, groupDialog.id);
+                                              groups.setItems((xs) => xs.filter((x) => x.id !== groupDialog.id));
+                                              expenses.setItems((xs) => xs.filter((x) => x.groupId !== groupDialog.id));
+                                              if (open === groupDialog.id) setOpen(null);
+                                              setGroupDialog(null);
+                                              setToast("Group deleted");
+                                          }} onSave={async (d) => {
                 const saved = await groupsApi.updateGroup(token, groupDialog.id, d);
                 groups.setItems((xs) => xs.map((x) => (x.id === saved.id ? {...x, name: saved.name, currency: saved.currency} : x)));
                 // rows in the all-expenses view carry their group's name and currency
@@ -103,7 +111,17 @@ function Main({token, onLogout}: { token: string; onLogout: () => void }) {
                 setGroupDialog(null);
             }}/>}
             {tagDialog && <NameDialog title={tagDialog.tag ? "Edit tag" : "New tag"} label="Tag name" name={tagDialog.tag?.name} maxLength={30}
-                                      onClose={() => setTagDialog(null)} onSave={async (name) => {
+                                      onClose={() => setTagDialog(null)}
+                                      onDelete={tagDialog.tag ? async () => {
+                                          const id = tagDialog.tag!.id;
+                                          await tagsApi.deleteTag(token, id);
+                                          setTags((ts) => ts.filter((x) => x.id !== id));
+                                          expenses.setItems((xs) => xs.map((x) => ({...x, tags: x.tags.filter((y) => y.id !== id)})));
+                                          if (tag === id) setTag(null);
+                                          setTagDialog(null);
+                                          setToast("Tag deleted");
+                                      } : undefined}
+                                      onSave={async (name) => {
                 const t = tagDialog.tag;
                 const saved = t ? await tagsApi.updateTag(token, t.id, name) : await tagsApi.createTag(token, name);
                 setTags((ts) => [...ts.filter((x) => x.id !== saved.id), saved].sort((a, b) => a.name.localeCompare(b.name)));

@@ -3,11 +3,11 @@ import {FormDialog} from "../../components/FormDialog.tsx";
 import type {Group} from "../../lib/money.ts";
 
 // Pass `group` to edit it instead of creating a new one.
-export function GroupDialog({group, onSave, onClose}: {
-    group?: Group; onSave: (g: { name: string; currency: string }) => void | Promise<void>; onClose: () => void
+export function GroupDialog({group, onSave, onDelete, onClose}: {
+    group?: Group; onSave: (g: { name: string; currency: string }) => void | Promise<void>; onDelete?: () => void | Promise<void>; onClose: () => void
 }) {
     return (
-        <FormDialog title={group ? "Edit group" : "New group"} submitLabel={group ? "Save" : "Create"} onClose={onClose}
+        <FormDialog title={group ? "Edit group" : "New group"} submitLabel={group ? "Save" : "Create"} onClose={onClose} onDelete={onDelete}
                     onSubmit={(f) => onSave({name: String(f.get("name")).trim(), currency: String(f.get("currency")).trim().toUpperCase()})}>
             <TextField name="name" label="Group name" defaultValue={group?.name} helperText="e.g. Home, Goa trip" required autoFocus/>
             <TextField name="currency" label="Currency" defaultValue={group?.currency ?? "INR"}
