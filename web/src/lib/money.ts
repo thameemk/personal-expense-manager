@@ -1,4 +1,4 @@
-export type Expense = { id: string; groupId: string; description: string; cents: number; date: string; tags: string[] };
+export type Expense = { id: string; groupId: string; description: string; cents: number; date: string; tags: string[]; updatedAt: string };
 
 export type Group = { id: string; name: string; currency: string; cents: number; count: number };
 

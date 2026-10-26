@@ -4,12 +4,17 @@ import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import {
     Avatar,
     Box,
+    Button,
     Chip,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogContentText,
+    DialogTitle,
     Divider,
     IconButton,
     List,
     ListItem,
-    ListItemAvatar,
     ListItemText,
     Typography
 } from "@mui/material";
@@ -17,10 +22,12 @@ import {useState} from "react";
 import {Empty} from "../../components/Empty.tsx";
 import {Section} from "../../components/Section.tsx";
 import {fmt, total, type Expense} from "../../lib/money.ts";
-import {day} from "../../lib/util.ts";
 
 const monthLabel = (ym: string) =>
     new Date(ym + "-01T00:00").toLocaleDateString(undefined, {month: "long", year: "numeric"});
+
+const part = (d: string, opt: Intl.DateTimeFormatOptions) =>
+    new Date(d + "T00:00").toLocaleDateString(undefined, opt);
 
 // Expects newest first; groups keep that order.
 function byMonth(expenses: Expense[]): [string, Expense[]][] {
@@ -32,6 +39,7 @@ function byMonth(expenses: Expense[]): [string, Expense[]][] {
 export function ExpenseList({expenses, currency, loading, onEdit, onDelete}: {
     expenses: Expense[]; currency: string; loading: boolean; onEdit: (e: Expense) => void; onDelete: (id: string) => void | Promise<void>
 }) {
+    const [confirm, setConfirm] = useState<Expense | null>(null);
     const [deleting, setDeleting] = useState<ReadonlySet<string>>(new Set());
     const remove = async (id: string) => {
         setDeleting((s) => new Set(s).add(id));
@@ -59,30 +67,41 @@ export function ExpenseList({expenses, currency, loading, onEdit, onDelete}: {
                         {items.map((e, i) => (
                             <Box key={e.id}>
                                 {i > 0 && <Divider component="li"/>}
-                                <ListItem secondaryAction={<>
-                                    <IconButton aria-label={`Edit ${e.description}`} onClick={() => onEdit(e)}><EditOutlinedIcon/></IconButton>
-                                    <IconButton edge="end" aria-label={`Delete ${e.description}`}
-                                                disabled={deleting.has(e.id)} onClick={() => remove(e.id)}><DeleteOutlineIcon/></IconButton>
+                                <ListItem sx={{py: 1.25, "&:hover": {bgcolor: "action.hover"}}} secondaryAction={<>
+                                    <IconButton size="small" aria-label={`Edit ${e.description}`} onClick={() => onEdit(e)}><EditOutlinedIcon/></IconButton>
+                                    <IconButton size="small" edge="end" color="error" aria-label={`Delete ${e.description}`}
+                                                disabled={deleting.has(e.id)} onClick={() => setConfirm(e)}><DeleteOutlineIcon/></IconButton>
                                 </>}>
-                                    <ListItemAvatar>
-                                        <Avatar sx={{
-                                            bgcolor: "action.selected",
-                                            color: "text.secondary"
-                                        }}><ReceiptLongIcon/></Avatar>
-                                    </ListItemAvatar>
+                                    <Box sx={{width: 40, mr: 2, textAlign: "center", lineHeight: 1, color: "text.secondary"}}>
+                                        <Typography variant="caption" sx={{textTransform: "uppercase"}}>{part(e.date, {month: "short"})}</Typography>
+                                        <Typography variant="h6" component="div" fontWeight={500}>{part(e.date, {day: "numeric"})}</Typography>
+                                    </Box>
+                                    <Avatar variant="rounded" sx={{mr: 2, bgcolor: "action.selected", color: "text.secondary"}}><ReceiptLongIcon/></Avatar>
                                     <ListItemText primary={e.description}
-                                                  secondary={<>
-                                                      {day(e.date)}
-                                                      {e.tags.map((t) => <Chip key={t} label={t} size="small" sx={{ml: 0.5}}/>)}
-                                                  </>}
-                                                  slotProps={{primary: {noWrap: true}, secondary: {component: "div"}}} sx={{minWidth: 0}}/>
-                                    <Typography fontWeight={500} sx={{mr: 9}}>{fmt(e.cents, currency)}</Typography>
+                                                  secondary={e.tags.length > 0 && e.tags.map((t) => <Chip key={t} label={t} size="small" sx={{mr: 0.5, mt: 0.5}}/>)}
+                                                  slotProps={{primary: {noWrap: true, fontWeight: 500}, secondary: {component: "div"}}} sx={{minWidth: 0}}/>
+                                    <Typography fontWeight={600} sx={{mr: 9, ml: 1, flexShrink: 0, fontVariantNumeric: "tabular-nums"}}>{fmt(e.cents, currency)}</Typography>
                                 </ListItem>
                             </Box>
                         ))}
                     </List>
                 </Section>
             ))}
+            <Dialog open={!!confirm} onClose={() => setConfirm(null)}>
+                <DialogTitle>Delete expense?</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        “{confirm?.description}” will be permanently deleted.
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions sx={{px: 3, pb: 2}}>
+                    <Button onClick={() => setConfirm(null)}>Cancel</Button>
+                    <Button color="error" variant="contained" onClick={() => {
+                        remove(confirm!.id);
+                        setConfirm(null);
+                    }}>Delete</Button>
+                </DialogActions>
+            </Dialog>
         </>
     );
 }

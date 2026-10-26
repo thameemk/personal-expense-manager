@@ -2,13 +2,13 @@ import {del, get, post, put, qs, type Page} from "./client.ts";
 import type {Expense} from "../lib/money.ts";
 
 // the API sends amount as a decimal string ("12.50"); the UI works in integer cents
-type ApiExpense = { id: string; group_id: string; description: string; amount: string; date: string; tags: string[] };
+type ApiExpense = { id: string; group_id: string; description: string; amount: string; date: string; tags: string[]; updated_at: string };
 const toExpense = (e: ApiExpense): Expense => ({
     id: e.id, groupId: e.group_id, description: e.description,
-    cents: Math.round(Number(e.amount) * 100), date: e.date, tags: e.tags,
+    cents: Math.round(Number(e.amount) * 100), date: e.date, tags: e.tags, updatedAt: e.updated_at,
 });
 
-export type ExpenseDraft = Omit<Expense, "id">;
+export type ExpenseDraft = Omit<Expense, "id" | "updatedAt">;
 
 export const listExpenses = (token: string, groupId: string, cursor?: string) =>
     get<Page<ApiExpense>>(`/expenses?${qs({group_id: groupId, cursor})}`, token)

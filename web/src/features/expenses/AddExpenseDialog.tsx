@@ -1,4 +1,4 @@
-import {Autocomplete, InputAdornment, TextField} from "@mui/material";
+import {Autocomplete, InputAdornment, TextField, Typography} from "@mui/material";
 import {useState} from "react";
 import {FormDialog} from "../../components/FormDialog.tsx";
 import type {ExpenseDraft} from "../../api/expenses.ts";
@@ -32,6 +32,9 @@ export function AddExpenseDialog({groupId, currency, expense, suggestions, onSav
             <Autocomplete multiple freeSolo options={suggestions} value={tags} onChange={(_, v) => setTags(v)}
                           autoSelect slotProps={{chip: {size: "small"}}}
                           renderInput={(params) => <TextField {...params} label="Tags" helperText="Type and press Enter"/>}/>
+            {expense && <Typography variant="caption" color="text.secondary">
+                Last edited {new Date(expense.updatedAt).toLocaleString(undefined, {dateStyle: "medium", timeStyle: "short"})}
+            </Typography>}
         </FormDialog>
     );
 }
