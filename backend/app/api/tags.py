@@ -64,3 +64,12 @@ def update_tag(
         tag.name = payload.name
         db.commit()
     return tag
+
+
+@router.delete("/{tag_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_tag(tag_id: UUID, user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> None:
+    tag = db.get(Tag, tag_id)
+    if tag is None or tag.owner_id != user.id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tag not found")
+    db.delete(tag)  # expense_tags rows cascade; the expenses stay, just untagged
+    db.commit()

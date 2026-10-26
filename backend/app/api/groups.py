@@ -115,3 +115,9 @@ def list_groups(
         for g in page["items"]
     ]
     return page
+
+
+@router.delete("/{group_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_group(group_id: UUID, user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> None:
+    db.delete(get_owned_group(group_id, user, db))  # its expenses go with it
+    db.commit()
