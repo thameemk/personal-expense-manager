@@ -1,9 +1,12 @@
 import AddIcon from "@mui/icons-material/Add";
+import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import LabelOutlinedIcon from "@mui/icons-material/LabelOutlined";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import {
     Avatar,
     Button,
+    IconButton,
+    ListItem,
     List,
     ListItemAvatar,
     ListItemButton,
@@ -19,9 +22,10 @@ import {colorOf} from "../../lib/util.ts";
 const item = {mx: 1, borderRadius: 2, "&.Mui-selected": {bgcolor: "action.selected"}};
 
 // selected = group id, or null for "All expenses"
-export function GroupSidebar({groups, selected, tags, selectedTag, onSelect, onAdd, paging}: {
+export function GroupSidebar({groups, selected, tags, selectedTag, onSelect, onAdd, onAddTag, onEditTag, paging}: {
     groups: Group[]; selected: string | null; tags: Tag[]; selectedTag: string | null;
     onSelect: (id: string | null, tag?: string) => void; onAdd: () => void;
+    onAddTag: () => void; onEditTag: (t: Tag) => void;
     paging: { loadMore: () => void; retry: () => void; hasMore: boolean; loading: boolean; error: string };
 }) {
     return (
@@ -46,14 +50,20 @@ export function GroupSidebar({groups, selected, tags, selectedTag, onSelect, onA
                 ))}
                 {groups.length === 0 && !paging.loading && !paging.error &&
                     <Typography variant="caption" color="text.secondary" sx={{px: 2.5}}>No groups yet</Typography>}
-                {tags.length > 0 && <ListSubheader disableSticky sx={{bgcolor: "transparent", mt: 1, lineHeight: "36px", fontSize: 12, letterSpacing: 1}}>
+                <ListSubheader disableSticky sx={{display: "flex", alignItems: "center", justifyContent: "space-between", bgcolor: "transparent", mt: 1, lineHeight: "36px", fontSize: 12, letterSpacing: 1}}>
                     TAGS
-                </ListSubheader>}
+                    <Button size="small" startIcon={<AddIcon/>} onClick={onAddTag}>add</Button>
+                </ListSubheader>
                 {tags.map((t) => (
-                    <ListItemButton key={t.id} sx={item} selected={selectedTag === t.id} onClick={() => onSelect(null, t.id)}>
-                        <ListItemIcon sx={{minWidth: 36}}><LabelOutlinedIcon fontSize="small"/></ListItemIcon>
-                        <ListItemText primary={t.name} slotProps={{primary: {noWrap: true}}}/>
-                    </ListItemButton>
+                    <ListItem key={t.id} disablePadding sx={{"&:hover .edit, & .edit:focus-visible": {opacity: 1}}}
+                              secondaryAction={<IconButton className="edit" size="small" edge="end" aria-label={`Rename ${t.name}`}
+                                                           sx={{mr: 1, "@media (hover: hover)": {opacity: 0}}}
+                                                           onClick={() => onEditTag(t)}><EditOutlinedIcon fontSize="small"/></IconButton>}>
+                        <ListItemButton sx={item} selected={selectedTag === t.id} onClick={() => onSelect(null, t.id)}>
+                            <ListItemIcon sx={{minWidth: 36}}><LabelOutlinedIcon fontSize="small"/></ListItemIcon>
+                            <ListItemText primary={t.name} slotProps={{primary: {noWrap: true}}}/>
+                        </ListItemButton>
+                    </ListItem>
                 ))}
             </List>
             <InfiniteScroll onMore={paging.loadMore} onRetry={paging.retry} hasMore={paging.hasMore} loading={paging.loading} count={groups.length} error={paging.error}/>
