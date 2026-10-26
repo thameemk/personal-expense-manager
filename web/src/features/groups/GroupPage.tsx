@@ -1,7 +1,7 @@
 import AddIcon from "@mui/icons-material/Add";
 import ClearIcon from "@mui/icons-material/Clear";
 import SearchIcon from "@mui/icons-material/Search";
-import {Box, Card, CardContent, Fab, IconButton, InputAdornment, TextField, Typography} from "@mui/material";
+import {Box, Fab, IconButton, InputAdornment, TextField, Typography} from "@mui/material";
 import {useEffect, useState} from "react";
 import {AddExpenseDialog} from "../expenses/AddExpenseDialog.tsx";
 import {InfiniteScroll} from "../../components/InfiniteScroll.tsx";
@@ -27,12 +27,10 @@ export function GroupPage({g, expenses, onQuery, onAdd, onEdit, onDelete, paging
     const mine = (g ? expenses.filter((e) => e.groupId === g.id) : [...expenses]).sort((a, b) => b.date.localeCompare(a.date));
     return (
         <>
-            {g && <Card sx={{mb: 3, bgcolor: "primary.main", color: "primary.contrastText", border: 0}}>
-                <CardContent>
-                    <Typography variant="body2" sx={{opacity: 0.7}}>Total spent</Typography>
-                    <Typography variant="h4" fontWeight={700}>{fmt(total(mine), g.currency)}</Typography>
-                </CardContent>
-            </Card>}
+            {g && <Box sx={{mb: 2}}>
+                <Typography variant="body2" color="text.secondary">Total spent</Typography>
+                <Typography variant="h4" fontWeight={700}>{fmt(total(mine), g.currency)}</Typography>
+            </Box>}
             <TextField size="small" fullWidth placeholder="Search description or tag" value={search}
                        onChange={(e) => setSearch(e.target.value)} sx={{mb: 2, "& .MuiOutlinedInput-root": {bgcolor: "background.paper", borderRadius: 999}}}
                        slotProps={{

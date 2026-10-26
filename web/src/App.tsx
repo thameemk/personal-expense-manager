@@ -5,12 +5,12 @@ import {setUnauthorizedHandler} from "./api/client.ts";
 import * as tagsApi from "./api/tags.ts";
 import * as expensesApi from "./api/expenses.ts";
 import * as groupsApi from "./api/groups.ts";
-import type {Expense, Tag} from "./lib/money.ts";
+import type {Expense, Group, Tag} from "./lib/money.ts";
 import {AppShell} from "./components/AppShell.tsx";
 import {AuthPage} from "./features/auth/AuthPage.tsx";
 import {GroupSidebar} from "./features/groups/GroupSidebar.tsx";
-import {TagDialog} from "./features/groups/TagDialog.tsx";
-import {NewGroupDialog} from "./features/groups/NewGroupDialog.tsx";
+import {NameDialog} from "./features/groups/NameDialog.tsx";
+import {GroupDialog} from "./features/groups/GroupDialog.tsx";
 import {ProfilePage} from "./features/profile/ProfilePage.tsx";
 import {GroupPage} from "./features/groups/GroupPage.tsx";
 import {useStored} from "./lib/storage.ts";
@@ -36,6 +36,7 @@ function Main({token, onLogout}: { token: string; onLogout: () => void }) {
     const [open, setOpen] = useState<string | null>(null);
     const [profile, setProfile] = useState(false);
     const [creating, setCreating] = useState(false);
+    const [groupDialog, setGroupDialog] = useState<Group | null>(null);
     const [tagDialog, setTagDialog] = useState<{ tag?: Tag } | null>(null);
     const [query, setQuery] = useState("");
     const [tag, setTag] = useState<string | null>(null); // tag view: expenses with this tag across groups
@@ -61,7 +62,7 @@ function Main({token, onLogout}: { token: string; onLogout: () => void }) {
                 title={profile ? "Profile" : g ? g.name : tag ? `#${tags.find((t) => t.id === tag)?.name ?? ""}` : "All expenses"}
                 onBack={profile ? () => setProfile(false) : undefined}
                 sidebar={<GroupSidebar groups={groups.items} selected={open} tags={tags} selectedTag={tag} paging={groups} onAdd={() => setCreating(true)}
-                                       onAddTag={() => setTagDialog({})} onEditTag={(t) => setTagDialog({tag: t})}
+                                       onEditGroup={setGroupDialog} onAddTag={() => setTagDialog({})} onEditTag={(t) => setTagDialog({tag: t})}
                                        onSelect={(id, t) => {
                                            setOpen(id);
                                            setTag(t ?? null);
@@ -94,15 +95,23 @@ function Main({token, onLogout}: { token: string; onLogout: () => void }) {
                                }, fail)}/>
                 )}
             </AppShell>
-            {tagDialog && <TagDialog tag={tagDialog.tag} onClose={() => setTagDialog(null)} onSave={async (name) => {
+            {groupDialog && <GroupDialog group={groupDialog} onClose={() => setGroupDialog(null)} onSave={async (d) => {
+                const saved = await groupsApi.updateGroup(token, groupDialog.id, d);
+                groups.setItems((xs) => xs.map((x) => (x.id === saved.id ? {...x, name: saved.name, currency: saved.currency} : x)));
+                // rows in the all-expenses view carry their group's name and currency
+                expenses.setItems((xs) => xs.map((x) => (x.groupId === saved.id && x.group ? {...x, group: {name: saved.name, currency: saved.currency}} : x)));
+                setGroupDialog(null);
+            }}/>}
+            {tagDialog && <NameDialog title={tagDialog.tag ? "Edit tag" : "New tag"} label="Tag name" name={tagDialog.tag?.name} maxLength={30}
+                                      onClose={() => setTagDialog(null)} onSave={async (name) => {
                 const t = tagDialog.tag;
-                const saved = t ? await tagsApi.renameTag(token, t.id, name) : await tagsApi.createTag(token, name);
+                const saved = t ? await tagsApi.updateTag(token, t.id, name) : await tagsApi.createTag(token, name);
                 setTags((ts) => [...ts.filter((x) => x.id !== saved.id), saved].sort((a, b) => a.name.localeCompare(b.name)));
                 // listed expenses still carry the old name
                 expenses.setItems((xs) => xs.map((x) => ({...x, tags: x.tags.map((y) => (y.id === saved.id ? saved : y))})));
                 setTagDialog(null);
             }}/>}
-            {creating && <NewGroupDialog onClose={() => setCreating(false)} onSave={async (d) => {
+            {creating && <GroupDialog onClose={() => setCreating(false)} onSave={async (d) => {
                 const gr = await groupsApi.createGroup(token, d.name, d.currency);
                 groups.setItems((xs) => [gr, ...xs]);
                 setOpen(gr.id);

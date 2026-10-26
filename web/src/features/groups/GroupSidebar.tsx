@@ -1,14 +1,13 @@
 import AddIcon from "@mui/icons-material/Add";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
+import FolderOutlinedIcon from "@mui/icons-material/FolderOutlined";
 import LabelOutlinedIcon from "@mui/icons-material/LabelOutlined";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import {
-    Avatar,
     Button,
     IconButton,
     ListItem,
     List,
-    ListItemAvatar,
     ListItemButton,
     ListItemIcon,
     ListItemText,
@@ -22,10 +21,10 @@ import {colorOf} from "../../lib/util.ts";
 const item = {mx: 1, borderRadius: 2, "&.Mui-selected": {bgcolor: "action.selected"}};
 
 // selected = group id, or null for "All expenses"
-export function GroupSidebar({groups, selected, tags, selectedTag, onSelect, onAdd, onAddTag, onEditTag, paging}: {
+export function GroupSidebar({groups, selected, tags, selectedTag, onSelect, onAdd, onAddTag, onEditTag, onEditGroup, paging}: {
     groups: Group[]; selected: string | null; tags: Tag[]; selectedTag: string | null;
     onSelect: (id: string | null, tag?: string) => void; onAdd: () => void;
-    onAddTag: () => void; onEditTag: (t: Tag) => void;
+    onAddTag: () => void; onEditTag: (t: Tag) => void; onEditGroup: (g: Group) => void;
     paging: { loadMore: () => void; retry: () => void; hasMore: boolean; loading: boolean; error: string };
 }) {
     return (
@@ -41,12 +40,15 @@ export function GroupSidebar({groups, selected, tags, selectedTag, onSelect, onA
                     <Button size="small" startIcon={<AddIcon/>} onClick={onAdd}>add</Button>
                 </ListSubheader>
                 {groups.map((gr) => (
-                    <ListItemButton key={gr.id} sx={item} selected={selected === gr.id && selectedTag === null} onClick={() => onSelect(gr.id)}>
-                        <ListItemAvatar sx={{minWidth: 40}}>
-                            <Avatar sx={{width: 28, height: 28, fontSize: 14, bgcolor: colorOf(gr.name)}}>{gr.name[0].toUpperCase()}</Avatar>
-                        </ListItemAvatar>
-                        <ListItemText primary={gr.name} slotProps={{primary: {noWrap: true}}}/>
-                    </ListItemButton>
+                    <ListItem key={gr.id} disablePadding sx={{"&:hover .edit, & .edit:focus-visible": {opacity: 1}}}
+                              secondaryAction={<IconButton className="edit" size="small" edge="end" aria-label={`Edit ${gr.name}`}
+                                                           sx={{mr: 1, "@media (hover: hover)": {opacity: 0}}}
+                                                           onClick={() => onEditGroup(gr)}><EditOutlinedIcon fontSize="small"/></IconButton>}>
+                        <ListItemButton sx={item} selected={selected === gr.id && selectedTag === null} onClick={() => onSelect(gr.id)}>
+                            <ListItemIcon sx={{minWidth: 36, color: colorOf(gr.id)}}><FolderOutlinedIcon fontSize="small"/></ListItemIcon>
+                            <ListItemText primary={gr.name} slotProps={{primary: {noWrap: true}}}/>
+                        </ListItemButton>
+                    </ListItem>
                 ))}
                 {groups.length === 0 && !paging.loading && !paging.error &&
                     <Typography variant="caption" color="text.secondary" sx={{px: 2.5}}>No groups yet</Typography>}
@@ -56,11 +58,11 @@ export function GroupSidebar({groups, selected, tags, selectedTag, onSelect, onA
                 </ListSubheader>
                 {tags.map((t) => (
                     <ListItem key={t.id} disablePadding sx={{"&:hover .edit, & .edit:focus-visible": {opacity: 1}}}
-                              secondaryAction={<IconButton className="edit" size="small" edge="end" aria-label={`Rename ${t.name}`}
+                              secondaryAction={<IconButton className="edit" size="small" edge="end" aria-label={`Edit ${t.name}`}
                                                            sx={{mr: 1, "@media (hover: hover)": {opacity: 0}}}
                                                            onClick={() => onEditTag(t)}><EditOutlinedIcon fontSize="small"/></IconButton>}>
                         <ListItemButton sx={item} selected={selectedTag === t.id} onClick={() => onSelect(null, t.id)}>
-                            <ListItemIcon sx={{minWidth: 36}}><LabelOutlinedIcon fontSize="small"/></ListItemIcon>
+                            <ListItemIcon sx={{minWidth: 36, color: colorOf(t.id)}}><LabelOutlinedIcon fontSize="small"/></ListItemIcon>
                             <ListItemText primary={t.name} slotProps={{primary: {noWrap: true}}}/>
                         </ListItemButton>
                     </ListItem>
