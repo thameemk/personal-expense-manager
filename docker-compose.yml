@@ -1,0 +1,3 @@
+include:
+  - path: backend/compose.yaml
+  - path: web/compose.yaml

@@ -1,0 +1,11 @@
+services:
+  backend:
+    build: .
+    env_file: .env # DATABASE_URL, CORS_ORIGINS; read directly so an exported shell var can't override it
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    read_only: true
+    tmpfs: [ /tmp ]
+    cap_drop: [ ALL ]
+    security_opt: [ no-new-privileges:true ]
+    restart: unless-stopped
