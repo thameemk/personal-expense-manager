@@ -2,6 +2,15 @@
 
 💸 Self-hosted expense manager: track spending by group and tag. FastAPI + React + PostgreSQL, 🐳 Docker-ready.
 
+## Why
+
+Most expense apps keep your financial data on someone else's servers, lock useful
+features behind subscriptions, or are too heavy for simple tracking. I built this
+to have a small expense manager that I fully own, it runs on my own machine, and organizes spending
+the way I think about it, by group and tag.
+
+## Layout
+
 ```text
 backend/   FastAPI, SQLAlchemy, PostgreSQL, Alembic
 web/       React + Vite + TypeScript, Material UI
