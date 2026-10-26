@@ -1,8 +1,6 @@
-import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import {
-    Avatar,
     Box,
     Button,
     Chip,
@@ -15,6 +13,7 @@ import {
     IconButton,
     List,
     ListItem,
+    ListItemButton,
     ListItemText,
     Typography
 } from "@mui/material";
@@ -71,24 +70,23 @@ export function ExpenseList({expenses, currency, loading, searching, onEdit, onD
                         {items.map((e, i) => (
                             <Box key={e.id}>
                                 {i > 0 && <Divider component="li"/>}
-                                <ListItem sx={{py: 1.25, "&:hover": {bgcolor: "action.hover"}, "&:hover .actions, &:focus-within .actions": {opacity: 1}}}
-                                          secondaryAction={<Box className="actions" sx={{"@media (hover: hover)": {opacity: 0}}}>
-                                    <IconButton size="small" aria-label={`Edit ${e.description}`} onClick={() => onEdit(e)}><EditOutlinedIcon/></IconButton>
-                                    <IconButton size="small" edge="end" color="error" aria-label={`Delete ${e.description}`}
-                                                disabled={deleting.has(e.id)} onClick={() => setConfirm(e)}><DeleteOutlineIcon/></IconButton>
-                                </Box>}>
-                                    <Box sx={{width: 40, mr: 2, textAlign: "center", lineHeight: 1, color: "text.secondary"}}>
+                                <ListItem disablePadding sx={{"&:hover .actions, &:focus-within .actions": {opacity: 1}}}
+                                          secondaryAction={<IconButton className="actions" size="small" edge="end" color="error" aria-label={`Delete ${e.description}`}
+                                                                       sx={{"@media (hover: hover)": {opacity: 0}}}
+                                                                       disabled={deleting.has(e.id)} onClick={() => setConfirm(e)}><DeleteOutlineIcon fontSize="small"/></IconButton>}>
+                                <ListItemButton onClick={() => onEdit(e)} aria-label={`Edit ${e.description}`} sx={{py: 0.5, px: {xs: 1.5, sm: 2}, pr: 6}}>
+                                    <Box sx={{width: 32, mr: 1.5, textAlign: "center", lineHeight: 1, color: "text.secondary"}}>
                                         <Typography variant="caption" sx={{textTransform: "uppercase"}}>{part(e.date, {month: "short"})}</Typography>
-                                        <Typography variant="h6" component="div" fontWeight={500}>{part(e.date, {day: "numeric"})}</Typography>
+                                        <Typography component="div" fontWeight={500}>{part(e.date, {day: "numeric"})}</Typography>
                                     </Box>
-                                    <Avatar variant="rounded" sx={{mr: 2, bgcolor: "action.selected", color: "text.secondary"}}><ReceiptLongIcon/></Avatar>
                                     <ListItemText primary={e.description}
                                                   secondary={(e.group || e.tags.length > 0) && <>
-                                                      {e.group && <Chip label={e.group.name} size="small" variant="outlined" sx={{mr: 0.5, mt: 0.5, color: colorOf(e.groupId), borderColor: colorOf(e.groupId)}}/>}
-                                                      {e.tags.map((t) => <Chip key={t.id} label={t.name} size="small" sx={{mr: 0.5, mt: 0.5, color: colorOf(t.id), bgcolor: `${colorOf(t.id)}22`}}/>)}
+                                                      {e.group && <Chip label={e.group.name} size="small" variant="outlined" sx={{mr: 0.5, mt: 0.25, height: 20, fontSize: 11, color: colorOf(e.groupId), borderColor: colorOf(e.groupId)}}/>}
+                                                      {e.tags.map((t) => <Chip key={t.id} label={t.name} size="small" sx={{mr: 0.5, mt: 0.25, height: 20, fontSize: 11, color: colorOf(t.id), bgcolor: `${colorOf(t.id)}22`}}/>)}
                                                   </>}
                                                   slotProps={{primary: {noWrap: true, fontWeight: 500}, secondary: {component: "div"}}} sx={{minWidth: 0}}/>
-                                    <Typography fontWeight={600} sx={{mr: 9, minWidth: 72, textAlign: "right", ml: 1, flexShrink: 0, fontVariantNumeric: "tabular-nums"}}>{fmt(e.cents, cur(e))}</Typography>
+                                    <Typography fontWeight={600} sx={{textAlign: "right", ml: 1, flexShrink: 0, fontVariantNumeric: "tabular-nums"}}>{fmt(e.cents, cur(e))}</Typography>
+                                </ListItemButton>
                                 </ListItem>
                             </Box>
                         ))}
