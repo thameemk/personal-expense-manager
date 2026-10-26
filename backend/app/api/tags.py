@@ -52,8 +52,8 @@ def create_tag(payload: TagBody, user: User = Depends(get_current_user), db: Ses
     return tag
 
 
-@router.put("/{tag_id}", response_model=TagResponse)
-def rename_tag(
+@router.patch("/{tag_id}", response_model=TagResponse)
+def update_tag(
     tag_id: UUID, payload: TagBody, user: User = Depends(get_current_user), db: Session = Depends(get_db)
 ) -> Tag:
     tag = db.get(Tag, tag_id)
