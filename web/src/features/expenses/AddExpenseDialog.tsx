@@ -14,7 +14,7 @@ export function AddExpenseDialog({groupId, currency, expense, suggestions, onSav
     onSave: (e: ExpenseDraft) => void | Promise<void>;
     onClose: () => void
 }) {
-    const [tags, setTags] = useState<string[]>(expense?.tags ?? []);
+    const [tags, setTags] = useState<string[]>(expense?.tags.map((t) => t.name) ?? []);
     return (
         <FormDialog title={expense ? "Edit expense" : "Add expense"} submitLabel="Save" onClose={onClose}
                     onSubmit={(f) => onSave({

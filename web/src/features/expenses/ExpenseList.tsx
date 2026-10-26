@@ -83,7 +83,7 @@ export function ExpenseList({expenses, currency, loading, searching, onEdit, onD
                                     <ListItemText primary={e.description}
                                                   secondary={(e.group || e.tags.length > 0) && <>
                                                       {e.group && <Chip label={e.group.name} size="small" variant="outlined" sx={{mr: 0.5, mt: 0.5}}/>}
-                                                      {e.tags.map((t) => <Chip key={t} label={t} size="small" sx={{mr: 0.5, mt: 0.5}}/>)}
+                                                      {e.tags.map((t) => <Chip key={t.id} label={t.name} size="small" sx={{mr: 0.5, mt: 0.5}}/>)}
                                                   </>}
                                                   slotProps={{primary: {noWrap: true, fontWeight: 500}, secondary: {component: "div"}}} sx={{minWidth: 0}}/>
                                     <Typography fontWeight={600} sx={{mr: 9, minWidth: 72, textAlign: "right", ml: 1, flexShrink: 0, fontVariantNumeric: "tabular-nums"}}>{fmt(e.cents, cur(e))}</Typography>

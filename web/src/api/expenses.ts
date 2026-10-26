@@ -1,18 +1,19 @@
 import {del, get, post, put, qs, type Page} from "./client.ts";
-import type {Expense} from "../lib/money.ts";
+import type {Expense, Tag} from "../lib/money.ts";
 
 // the API sends amount as a decimal string ("12.50"); the UI works in integer cents
-type ApiExpense = { id: string; group_id: string; description: string; amount: string; date: string; tags: string[]; updated_at: string; group?: { name: string; currency: string } };
+type ApiExpense = { id: string; group_id: string; description: string; amount: string; date: string; tags: Tag[]; updated_at: string; group?: { name: string; currency: string } };
 const toExpense = (e: ApiExpense): Expense => ({
     id: e.id, groupId: e.group_id, description: e.description,
     cents: Math.round(Number(e.amount) * 100), date: e.date, tags: e.tags, updatedAt: e.updated_at,
     group: e.group && {name: e.group.name, currency: e.group.currency},
 });
 
-export type ExpenseDraft = Omit<Expense, "id" | "updatedAt" | "group">;
+// tags are sent as names; the server creates the missing ones
+export type ExpenseDraft = Omit<Expense, "id" | "updatedAt" | "group" | "tags"> & { tags: string[] };
 
-export const listExpenses = (token: string, groupId: string | undefined, q: string, cursor?: string) =>
-    get<Page<ApiExpense>>(`/expenses?${qs({group_id: groupId, q: q || undefined, include: groupId ? undefined : "group", cursor})}`, token)
+export const listExpenses = (token: string, groupId: string | undefined, q: string, tagId: string | undefined, cursor?: string) =>
+    get<Page<ApiExpense>>(`/expenses?${qs({group_id: groupId, q: q || undefined, tag_id: tagId, include: groupId ? undefined : "group", cursor})}`, token)
         .then((p) => ({...p, items: p.items.map(toExpense)}));
 
 export const createExpense = (token: string, d: ExpenseDraft) =>

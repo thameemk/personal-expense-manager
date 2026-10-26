@@ -5,7 +5,7 @@ import {setUnauthorizedHandler} from "./api/client.ts";
 import * as tagsApi from "./api/tags.ts";
 import * as expensesApi from "./api/expenses.ts";
 import * as groupsApi from "./api/groups.ts";
-import type {Expense} from "./lib/money.ts";
+import type {Expense, Tag} from "./lib/money.ts";
 import {AppShell} from "./components/AppShell.tsx";
 import {AuthPage} from "./features/auth/AuthPage.tsx";
 import {GroupSidebar} from "./features/groups/GroupSidebar.tsx";
@@ -36,26 +36,32 @@ function Main({token, onLogout}: { token: string; onLogout: () => void }) {
     const [profile, setProfile] = useState(false);
     const [creating, setCreating] = useState(false);
     const [query, setQuery] = useState("");
+    const [tag, setTag] = useState<string | null>(null); // tag view: expenses with this tag across groups
     const [toast, setToast] = useState("");
     const groups = usePaged((c) => groupsApi.listGroups(token, c), token);
-    const expenses = usePaged((c) => expensesApi.listExpenses(token, open ?? undefined, query, c), `${open ?? "all"}|${query}`);
-    const [tags, setTags] = useState<string[]>([]); // the user's existing tags, offered as suggestions
+    const expenses = usePaged((c) => expensesApi.listExpenses(token, open ?? undefined, query, tag ?? undefined, c), `${open ?? "all"}|${tag}|${query}`);
+    const [tags, setTags] = useState<Tag[]>([]); // the user's existing tags, offered as suggestions
     useEffect(() => {
         tagsApi.listTags(token).then(setTags, () => {
         });
     }, [token]);
-    const addTags = (e: Expense) => setTags((ts) => [...new Set([...ts, ...e.tags])].sort());
+    const addTags = (e: Expense) => setTags((ts) => {
+        const have = new Set(ts.map((t) => t.id));
+        return [...ts, ...e.tags.filter((t) => !have.has(t.id))].sort((a, b) => a.name.localeCompare(b.name));
+    });
     const g = groups.items.find((x) => x.id === open);
+    const tagNames = tags.map((t) => t.name);
     const fail = (e: unknown) => setToast((e as Error).message);
 
     return (
         <>
             <AppShell
-                title={profile ? "Profile" : g ? g.name : "All expenses"}
+                title={profile ? "Profile" : g ? g.name : tag ? `#${tags.find((t) => t.id === tag)?.name ?? ""}` : "All expenses"}
                 onBack={profile ? () => setProfile(false) : undefined}
-                sidebar={<GroupSidebar groups={groups.items} selected={open} paging={groups} onAdd={() => setCreating(true)}
-                                       onSelect={(id) => {
+                sidebar={<GroupSidebar groups={groups.items} selected={open} tags={tags} selectedTag={tag} paging={groups} onAdd={() => setCreating(true)}
+                                       onSelect={(id, t) => {
                                            setOpen(id);
+                                           setTag(t ?? null);
                                            setProfile(false);
                                        }}/>}
                 onProfile={profile ? undefined : () => setProfile(true)}
@@ -68,7 +74,7 @@ function Main({token, onLogout}: { token: string; onLogout: () => void }) {
                                      setProfile(false);
                                  }}/>
                 ) : (
-                    <GroupPage g={g} onQuery={setQuery} expenses={expenses.items} paging={expenses} tags={tags}
+                    <GroupPage g={g} onQuery={setQuery} expenses={expenses.items} paging={expenses} tags={tagNames}
                                onAdd={(d) => expensesApi.createExpense(token, d).then((e) => {
                                    addTags(e);
                                    expenses.setItems((xs) => [e, ...xs]);
@@ -89,6 +95,7 @@ function Main({token, onLogout}: { token: string; onLogout: () => void }) {
                 const gr = await groupsApi.createGroup(token, d.name, d.currency);
                 groups.setItems((xs) => [gr, ...xs]);
                 setOpen(gr.id);
+                setTag(null);
                 setProfile(false);
                 setCreating(false);
             }}/>}
