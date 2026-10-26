@@ -2,18 +2,18 @@ from __future__ import annotations
 
 from datetime import date as Date
 from decimal import Decimal
-from typing import Literal
+from typing import Annotated, Literal
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import select
 from sqlalchemy.orm import Session, contains_eager
 
 from app.api.dependencies import get_current_user
 from app.api.groups import GroupResponse, get_owned_group
 from app.db.session import get_db
-from app.models import Expense, Group, User
+from app.models import Expense, Group, Tag, User
 from app.utils.pagination import Page, paginate
 
 router = APIRouter(prefix="/api/v1/expenses", tags=["expenses"])
@@ -25,6 +25,21 @@ class ExpenseUpdate(BaseModel):
     description: str = Field(min_length=1, max_length=255)
     amount: Decimal = Field(gt=0, max_digits=12, decimal_places=2)
     date: Date
+    tags: list[Annotated[str, Field(min_length=1, max_length=30)]] = Field(default=[], max_length=10)
+
+    @field_validator("tags", mode="before")
+    @classmethod
+    def clean_tags(cls, tags):
+        # trim, lowercase and drop duplicates (keeping order) so "Food" and "food " are one tag
+        if not isinstance(tags, list) or not all(isinstance(t, str) for t in tags):
+            return tags
+        return list(dict.fromkeys(t.strip().lower() for t in tags if t.strip()))
+
+
+def set_tags(expense: Expense, names: list[str], user: User, db: Session) -> None:
+    """Point the expense at the caller's tags with these names, creating the missing ones."""
+    found = {t.name: t for t in db.scalars(select(Tag).where(Tag.owner_id == user.id, Tag.name.in_(names)))}
+    expense.tags = [found.get(n) or Tag(owner_id=user.id, name=n) for n in names]
 
 
 class ExpenseCreate(ExpenseUpdate):
@@ -39,6 +54,7 @@ class ExpenseResponse(BaseModel):
     description: str
     amount: Decimal
     date: Date
+    tags: list[str]
     group: GroupResponse | None = None  # only with ?include=group
 
 
@@ -52,6 +68,7 @@ def to_response(expense: Expense, with_group: bool = False) -> ExpenseResponse:
         description=expense.description,
         amount=expense.amount,
         date=expense.date,
+        tags=[t.name for t in expense.tags],
         **extra,
     )
 
@@ -68,7 +85,8 @@ def create_expense(
     db: Session = Depends(get_db),
 ) -> ExpenseResponse:
     get_owned_group(payload.group_id, user, db)  # 404 unless it is the caller's group
-    expense = Expense(**payload.model_dump())
+    expense = Expense(**payload.model_dump(exclude={"tags"}))
+    set_tags(expense, payload.tags, user, db)
     db.add(expense)
     db.commit()
     return to_response(expense)
@@ -114,8 +132,9 @@ def update_expense(
     db: Session = Depends(get_db),
 ) -> ExpenseResponse:
     expense = get_owned_expense(expense_id, user, db)
-    for field, value in payload.model_dump().items():
+    for field, value in payload.model_dump(exclude={"tags"}).items():
         setattr(expense, field, value)
+    set_tags(expense, payload.tags, user, db)
     db.commit()
     return to_response(expense)
 
