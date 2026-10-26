@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session, contains_eager
 
 from app.api.dependencies import get_current_user
 from app.api.groups import GroupResponse, get_owned_group
+from app.api.tags import TagResponse
 from app.db.session import get_db
 from app.models import Expense, Group, Tag, User
 from app.utils.pagination import Page, paginate
@@ -55,7 +56,7 @@ class ExpenseResponse(BaseModel):
     description: str
     amount: Decimal
     date: Date
-    tags: list[str]
+    tags: list[TagResponse]
     updated_at: datetime
     group: GroupResponse | None = None  # only with ?include=group
 
@@ -70,7 +71,7 @@ def to_response(expense: Expense, with_group: bool = False) -> ExpenseResponse:
         description=expense.description,
         amount=expense.amount,
         date=expense.date,
-        tags=[t.name for t in expense.tags],
+        tags=[TagResponse.model_validate(t) for t in expense.tags],
         updated_at=expense.updated_at,
         **extra,
     )
@@ -98,6 +99,7 @@ def create_expense(
 @router.get("", response_model=Page[ExpenseResponse], response_model_exclude_unset=True)
 def list_expenses(
     group_id: UUID | None = None,
+    tag_id: UUID | None = None,
     q: str | None = Query(None, max_length=100),  # matches description or tag name
     include: Literal["group"] | None = None,
     cursor: str | None = None,
@@ -112,6 +114,8 @@ def list_expenses(
         stmt = stmt.options(contains_eager(Expense.group))
     if group_id:
         stmt = stmt.where(Expense.group_id == group_id)
+    if tag_id:
+        stmt = stmt.where(Expense.tags.any(Tag.id == tag_id))
     if q and q.strip():
         q = q.strip()
         stmt = stmt.where(
