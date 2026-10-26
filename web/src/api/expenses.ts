@@ -11,8 +11,8 @@ const toExpense = (e: ApiExpense): Expense => ({
 
 export type ExpenseDraft = Omit<Expense, "id" | "updatedAt" | "group">;
 
-export const listExpenses = (token: string, groupId: string | undefined, cursor?: string) =>
-    get<Page<ApiExpense>>(`/expenses?${qs({group_id: groupId, include: groupId ? undefined : "group", cursor})}`, token)
+export const listExpenses = (token: string, groupId: string | undefined, q: string, cursor?: string) =>
+    get<Page<ApiExpense>>(`/expenses?${qs({group_id: groupId, q: q || undefined, include: groupId ? undefined : "group", cursor})}`, token)
         .then((p) => ({...p, items: p.items.map(toExpense)}));
 
 export const createExpense = (token: string, d: ExpenseDraft) =>

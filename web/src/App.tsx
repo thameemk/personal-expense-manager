@@ -35,9 +35,10 @@ function Main({token, onLogout}: { token: string; onLogout: () => void }) {
     const [open, setOpen] = useState<string | null>(null);
     const [profile, setProfile] = useState(false);
     const [creating, setCreating] = useState(false);
+    const [query, setQuery] = useState("");
     const [toast, setToast] = useState("");
     const groups = usePaged((c) => groupsApi.listGroups(token, c), token);
-    const expenses = usePaged((c) => expensesApi.listExpenses(token, open ?? undefined, c), open ?? "all");
+    const expenses = usePaged((c) => expensesApi.listExpenses(token, open ?? undefined, query, c), `${open ?? "all"}|${query}`);
     const [tags, setTags] = useState<string[]>([]); // the user's existing tags, offered as suggestions
     useEffect(() => {
         tagsApi.listTags(token).then(setTags, () => {
@@ -67,7 +68,7 @@ function Main({token, onLogout}: { token: string; onLogout: () => void }) {
                                      setProfile(false);
                                  }}/>
                 ) : (
-                    <GroupPage g={g} expenses={expenses.items} paging={expenses} tags={tags}
+                    <GroupPage g={g} onQuery={setQuery} expenses={expenses.items} paging={expenses} tags={tags}
                                onAdd={(d) => expensesApi.createExpense(token, d).then((e) => {
                                    addTags(e);
                                    expenses.setItems((xs) => [e, ...xs]);

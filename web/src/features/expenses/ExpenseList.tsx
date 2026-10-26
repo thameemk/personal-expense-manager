@@ -36,8 +36,8 @@ function byMonth(expenses: Expense[]): [string, Expense[]][] {
     return [...months];
 }
 
-export function ExpenseList({expenses, currency, loading, onEdit, onDelete}: {
-    expenses: Expense[]; currency?: string; loading: boolean; onEdit: (e: Expense) => void; onDelete: (id: string) => void | Promise<void>
+export function ExpenseList({expenses, currency, loading, searching, onEdit, onDelete}: {
+    expenses: Expense[]; currency?: string; loading: boolean; searching?: boolean; onEdit: (e: Expense) => void; onDelete: (id: string) => void | Promise<void>
 }) {
     const cur = (e: Expense) => e.group?.currency ?? currency;
     const [confirm, setConfirm] = useState<Expense | null>(null);
@@ -57,7 +57,7 @@ export function ExpenseList({expenses, currency, loading, onEdit, onDelete}: {
     if (expenses.length === 0)
         return loading ? null : (
             <Section title="Expenses">
-                <Empty icon={<ReceiptLongIcon fontSize="large"/>} text="No expenses yet. Tap “Add expense”."/>
+                <Empty icon={<ReceiptLongIcon fontSize="large"/>} text={searching ? "No matching expenses." : "No expenses yet. Tap “Add expense”."}/>
             </Section>
         );
     return (
@@ -86,7 +86,7 @@ export function ExpenseList({expenses, currency, loading, onEdit, onDelete}: {
                                                       {e.tags.map((t) => <Chip key={t} label={t} size="small" sx={{mr: 0.5, mt: 0.5}}/>)}
                                                   </>}
                                                   slotProps={{primary: {noWrap: true, fontWeight: 500}, secondary: {component: "div"}}} sx={{minWidth: 0}}/>
-                                    <Typography fontWeight={600} sx={{mr: 9, ml: 1, flexShrink: 0, fontVariantNumeric: "tabular-nums"}}>{fmt(e.cents, cur(e))}</Typography>
+                                    <Typography fontWeight={600} sx={{mr: 9, minWidth: 72, textAlign: "right", ml: 1, flexShrink: 0, fontVariantNumeric: "tabular-nums"}}>{fmt(e.cents, cur(e))}</Typography>
                                 </ListItem>
                             </Box>
                         ))}
