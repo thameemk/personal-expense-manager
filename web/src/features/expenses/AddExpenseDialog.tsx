@@ -1,22 +1,25 @@
-import {InputAdornment, TextField} from "@mui/material";
+import {Autocomplete, InputAdornment, TextField} from "@mui/material";
+import {useState} from "react";
 import {FormDialog} from "../../components/FormDialog.tsx";
 import type {ExpenseDraft} from "../../api/expenses.ts";
 import type {Expense} from "../../lib/money.ts";
 import {today} from "../../lib/util.ts";
 
 // Pass `expense` to edit it instead of adding a new one.
-export function AddExpenseDialog({groupId, currency, expense, onSave, onClose}: {
+export function AddExpenseDialog({groupId, currency, expense, suggestions, onSave, onClose}: {
     groupId: string;
     expense?: Expense;
+    suggestions: string[];
     currency: string;
     onSave: (e: ExpenseDraft) => void | Promise<void>;
     onClose: () => void
 }) {
+    const [tags, setTags] = useState<string[]>(expense?.tags ?? []);
     return (
         <FormDialog title={expense ? "Edit expense" : "Add expense"} submitLabel="Save" onClose={onClose}
                     onSubmit={(f) => onSave({
                         groupId, description: String(f.get("desc")).trim(),
-                        cents: Math.round(Number(f.get("amount")) * 100), date: String(f.get("date")),
+                        cents: Math.round(Number(f.get("amount")) * 100), date: String(f.get("date")), tags,
                     })}>
             <TextField name="desc" label="Description" defaultValue={expense?.description} required autoFocus/>
             <TextField name="amount" label="Amount" type="number" defaultValue={expense && expense.cents / 100} required
@@ -26,6 +29,9 @@ export function AddExpenseDialog({groupId, currency, expense, onSave, onClose}: 
                        }}/>
             <TextField name="date" label="Date" type="date" defaultValue={expense?.date ?? today()} required
                        slotProps={{inputLabel: {shrink: true}}}/>
+            <Autocomplete multiple freeSolo options={suggestions} value={tags} onChange={(_, v) => setTags(v)}
+                          autoSelect slotProps={{chip: {size: "small"}}}
+                          renderInput={(params) => <TextField {...params} label="Tags" helperText="Type and press Enter"/>}/>
         </FormDialog>
     );
 }

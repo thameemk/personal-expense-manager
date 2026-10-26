@@ -4,6 +4,7 @@ import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import {
     Avatar,
     Box,
+    Chip,
     Divider,
     IconButton,
     List,
@@ -69,8 +70,12 @@ export function ExpenseList({expenses, currency, loading, onEdit, onDelete}: {
                                             color: "text.secondary"
                                         }}><ReceiptLongIcon/></Avatar>
                                     </ListItemAvatar>
-                                    <ListItemText primary={e.description} secondary={day(e.date)}
-                                                  slotProps={{primary: {noWrap: true}}} sx={{minWidth: 0}}/>
+                                    <ListItemText primary={e.description}
+                                                  secondary={<>
+                                                      {day(e.date)}
+                                                      {e.tags.map((t) => <Chip key={t} label={t} size="small" sx={{ml: 0.5}}/>)}
+                                                  </>}
+                                                  slotProps={{primary: {noWrap: true}, secondary: {component: "div"}}} sx={{minWidth: 0}}/>
                                     <Typography fontWeight={500} sx={{mr: 9}}>{fmt(e.cents, currency)}</Typography>
                                 </ListItem>
                             </Box>

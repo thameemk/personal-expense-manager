@@ -7,9 +7,10 @@ import type {ExpenseDraft} from "../../api/expenses.ts";
 import {ExpenseList} from "../expenses/ExpenseList.tsx";
 import {fmt, total, type Expense, type Group} from "../../lib/money.ts";
 
-export function GroupPage({g, expenses, onAdd, onEdit, onDelete, paging}: {
+export function GroupPage({g, expenses, onAdd, onEdit, onDelete, paging, tags}: {
     g: Group; expenses: Expense[]; onAdd: (e: ExpenseDraft) => void | Promise<void>; onEdit: (id: string, e: ExpenseDraft) => void | Promise<void>;
     onDelete: (id: string) => void | Promise<void>;
+    tags: string[];
     paging: { loadMore: () => void; retry: () => void; hasMore: boolean; loading: boolean; error: string };
 }) {
     const [adding, setAdding] = useState(false);
@@ -30,11 +31,11 @@ export function GroupPage({g, expenses, onAdd, onEdit, onDelete, paging}: {
                  sx={{position: "fixed", right: 24, bottom: 24}}>
                 <AddIcon sx={{mr: 1}}/> Add expense
             </Fab>
-            {adding && <AddExpenseDialog groupId={g.id} currency={g.currency} onClose={() => setAdding(false)} onSave={async (e) => {
+            {adding && <AddExpenseDialog suggestions={tags} groupId={g.id} currency={g.currency} onClose={() => setAdding(false)} onSave={async (e) => {
                 await onAdd(e);
                 setAdding(false);
             }}/>}
-            {editing && <AddExpenseDialog groupId={g.id} currency={g.currency} expense={editing} onClose={() => setEditing(undefined)} onSave={async (e) => {
+            {editing && <AddExpenseDialog suggestions={tags} groupId={g.id} currency={g.currency} expense={editing} onClose={() => setEditing(undefined)} onSave={async (e) => {
                 await onEdit(editing.id, e);
                 setEditing(undefined);
             }}/>}

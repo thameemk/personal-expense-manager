@@ -2,10 +2,10 @@ import {del, get, post, put, qs, type Page} from "./client.ts";
 import type {Expense} from "../lib/money.ts";
 
 // the API sends amount as a decimal string ("12.50"); the UI works in integer cents
-type ApiExpense = { id: string; group_id: string; description: string; amount: string; date: string };
+type ApiExpense = { id: string; group_id: string; description: string; amount: string; date: string; tags: string[] };
 const toExpense = (e: ApiExpense): Expense => ({
     id: e.id, groupId: e.group_id, description: e.description,
-    cents: Math.round(Number(e.amount) * 100), date: e.date,
+    cents: Math.round(Number(e.amount) * 100), date: e.date, tags: e.tags,
 });
 
 export type ExpenseDraft = Omit<Expense, "id">;
@@ -16,12 +16,12 @@ export const listExpenses = (token: string, groupId: string, cursor?: string) =>
 
 export const createExpense = (token: string, d: ExpenseDraft) =>
     post<ApiExpense>("/expenses", {
-        group_id: d.groupId, description: d.description, amount: (d.cents / 100).toFixed(2), date: d.date,
+        group_id: d.groupId, description: d.description, amount: (d.cents / 100).toFixed(2), date: d.date, tags: d.tags,
     }, token).then(toExpense);
 
 export const updateExpense = (token: string, id: string, d: ExpenseDraft) =>
     put<ApiExpense>(`/expenses/${id}`, {
-        description: d.description, amount: (d.cents / 100).toFixed(2), date: d.date,
+        description: d.description, amount: (d.cents / 100).toFixed(2), date: d.date, tags: d.tags,
     }, token).then(toExpense);
 
 export const deleteExpense = (token: string, id: string) => del(`/expenses/${id}`, token);
