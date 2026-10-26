@@ -37,8 +37,9 @@ function byMonth(expenses: Expense[]): [string, Expense[]][] {
 }
 
 export function ExpenseList({expenses, currency, loading, onEdit, onDelete}: {
-    expenses: Expense[]; currency: string; loading: boolean; onEdit: (e: Expense) => void; onDelete: (id: string) => void | Promise<void>
+    expenses: Expense[]; currency?: string; loading: boolean; onEdit: (e: Expense) => void; onDelete: (id: string) => void | Promise<void>
 }) {
+    const cur = (e: Expense) => e.group?.currency ?? currency;
     const [confirm, setConfirm] = useState<Expense | null>(null);
     const [deleting, setDeleting] = useState<ReadonlySet<string>>(new Set());
     const remove = async (id: string) => {
@@ -61,8 +62,10 @@ export function ExpenseList({expenses, currency, loading, onEdit, onDelete}: {
         );
     return (
         <>
-            {byMonth(expenses).map(([ym, items]) => (
-                <Section key={ym} title={`${monthLabel(ym)} · ${fmt(total(items), currency)}`}>
+            {byMonth(expenses).map(([ym, items]) => {
+                const currencies = new Set(items.map(cur)); // a month total only makes sense in one currency
+                return (
+                <Section key={ym} title={currencies.size === 1 ? `${monthLabel(ym)} · ${fmt(total(items), cur(items[0]))}` : monthLabel(ym)}>
                     <List disablePadding>
                         {items.map((e, i) => (
                             <Box key={e.id}>
@@ -78,15 +81,19 @@ export function ExpenseList({expenses, currency, loading, onEdit, onDelete}: {
                                     </Box>
                                     <Avatar variant="rounded" sx={{mr: 2, bgcolor: "action.selected", color: "text.secondary"}}><ReceiptLongIcon/></Avatar>
                                     <ListItemText primary={e.description}
-                                                  secondary={e.tags.length > 0 && e.tags.map((t) => <Chip key={t} label={t} size="small" sx={{mr: 0.5, mt: 0.5}}/>)}
+                                                  secondary={(e.group || e.tags.length > 0) && <>
+                                                      {e.group && <Chip label={e.group.name} size="small" variant="outlined" sx={{mr: 0.5, mt: 0.5}}/>}
+                                                      {e.tags.map((t) => <Chip key={t} label={t} size="small" sx={{mr: 0.5, mt: 0.5}}/>)}
+                                                  </>}
                                                   slotProps={{primary: {noWrap: true, fontWeight: 500}, secondary: {component: "div"}}} sx={{minWidth: 0}}/>
-                                    <Typography fontWeight={600} sx={{mr: 9, ml: 1, flexShrink: 0, fontVariantNumeric: "tabular-nums"}}>{fmt(e.cents, currency)}</Typography>
+                                    <Typography fontWeight={600} sx={{mr: 9, ml: 1, flexShrink: 0, fontVariantNumeric: "tabular-nums"}}>{fmt(e.cents, cur(e))}</Typography>
                                 </ListItem>
                             </Box>
                         ))}
                     </List>
                 </Section>
-            ))}
+                );
+            })}
             <Dialog open={!!confirm} onClose={() => setConfirm(null)}>
                 <DialogTitle>Delete expense?</DialogTitle>
                 <DialogContent>

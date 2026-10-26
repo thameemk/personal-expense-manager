@@ -8,7 +8,8 @@ import * as groupsApi from "./api/groups.ts";
 import type {Expense} from "./lib/money.ts";
 import {AppShell} from "./components/AppShell.tsx";
 import {AuthPage} from "./features/auth/AuthPage.tsx";
-import {GroupListPage} from "./features/groups/GroupListPage.tsx";
+import {GroupSidebar} from "./features/groups/GroupSidebar.tsx";
+import {NewGroupDialog} from "./features/groups/NewGroupDialog.tsx";
 import {ProfilePage} from "./features/profile/ProfilePage.tsx";
 import {GroupPage} from "./features/groups/GroupPage.tsx";
 import {useStored} from "./lib/storage.ts";
@@ -33,9 +34,10 @@ export default function App() {
 function Main({token, onLogout}: { token: string; onLogout: () => void }) {
     const [open, setOpen] = useState<string | null>(null);
     const [profile, setProfile] = useState(false);
+    const [creating, setCreating] = useState(false);
     const [toast, setToast] = useState("");
     const groups = usePaged((c) => groupsApi.listGroups(token, c), token);
-    const expenses = usePaged((c) => expensesApi.listExpenses(token, open!, c), open);
+    const expenses = usePaged((c) => expensesApi.listExpenses(token, open ?? undefined, c), open ?? "all");
     const [tags, setTags] = useState<string[]>([]); // the user's existing tags, offered as suggestions
     useEffect(() => {
         tagsApi.listTags(token).then(setTags, () => {
@@ -48,8 +50,13 @@ function Main({token, onLogout}: { token: string; onLogout: () => void }) {
     return (
         <>
             <AppShell
-                title={profile ? "Profile" : g ? g.name : "Expense Manager"}
-                onBack={profile ? () => setProfile(false) : g ? () => setOpen(null) : undefined}
+                title={profile ? "Profile" : g ? g.name : "All expenses"}
+                onBack={profile ? () => setProfile(false) : undefined}
+                sidebar={<GroupSidebar groups={groups.items} selected={open} paging={groups} onAdd={() => setCreating(true)}
+                                       onSelect={(id) => {
+                                           setOpen(id);
+                                           setProfile(false);
+                                       }}/>}
                 onProfile={profile ? undefined : () => setProfile(true)}
             >
                 {profile ? (
@@ -59,7 +66,7 @@ function Main({token, onLogout}: { token: string; onLogout: () => void }) {
                                      setOpen(null);
                                      setProfile(false);
                                  }}/>
-                ) : g ? (
+                ) : (
                     <GroupPage g={g} expenses={expenses.items} paging={expenses} tags={tags}
                                onAdd={(d) => expensesApi.createExpense(token, d).then((e) => {
                                    addTags(e);
@@ -68,21 +75,22 @@ function Main({token, onLogout}: { token: string; onLogout: () => void }) {
                                })}
                                onEdit={(id, d) => expensesApi.updateExpense(token, id, d).then((e) => {
                                    addTags(e);
-                                   expenses.setItems((xs) => xs.map((x) => (x.id === id ? e : x)));
+                                   expenses.setItems((xs) => xs.map((x) => (x.id === id ? {...e, group: x.group} : x)));
                                    setToast("Expense updated");
                                })}
                                onDelete={(id) => expensesApi.deleteExpense(token, id).then(() => {
                                    expenses.setItems((xs) => xs.filter((e) => e.id !== id));
                                    setToast("Expense deleted");
                                }, fail)}/>
-                ) : (
-                    <GroupListPage groups={groups.items} paging={groups} onOpen={setOpen}
-                                   onCreate={(d) => groupsApi.createGroup(token, d.name, d.currency).then((gr) => {
-                                       groups.setItems((xs) => [gr, ...xs]);
-                                       setOpen(gr.id);
-                                   })}/>
                 )}
             </AppShell>
+            {creating && <NewGroupDialog onClose={() => setCreating(false)} onSave={async (d) => {
+                const gr = await groupsApi.createGroup(token, d.name, d.currency);
+                groups.setItems((xs) => [gr, ...xs]);
+                setOpen(gr.id);
+                setProfile(false);
+                setCreating(false);
+            }}/>}
             <Snackbar open={!!toast} autoHideDuration={3000} onClose={() => setToast("")} message={toast}/>
         </>
     );
