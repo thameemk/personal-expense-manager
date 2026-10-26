@@ -98,6 +98,7 @@ def create_expense(
 @router.get("", response_model=Page[ExpenseResponse], response_model_exclude_unset=True)
 def list_expenses(
     group_id: UUID | None = None,
+    q: str | None = Query(None, max_length=100),  # matches description or tag name
     include: Literal["group"] | None = None,
     cursor: str | None = None,
     limit: int = Query(20, ge=1, le=100),
@@ -111,6 +112,12 @@ def list_expenses(
         stmt = stmt.options(contains_eager(Expense.group))
     if group_id:
         stmt = stmt.where(Expense.group_id == group_id)
+    if q and q.strip():
+        q = q.strip()
+        stmt = stmt.where(
+            Expense.description.icontains(q, autoescape=True)
+            | Expense.tags.any(Tag.name.icontains(q, autoescape=True))
+        )
     page = paginate(db, stmt, Expense.date, Expense, cursor, limit)
     page["items"] = [to_response(e, with_group=bool(include)) for e in page["items"]]
     return page
