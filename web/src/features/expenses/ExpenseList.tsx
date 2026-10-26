@@ -1,13 +1,19 @@
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import {
-    Avatar,
     Box,
+    Button,
+    Chip,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogContentText,
+    DialogTitle,
     Divider,
     IconButton,
     List,
     ListItem,
-    ListItemAvatar,
+    ListItemButton,
     ListItemText,
     Typography
 } from "@mui/material";
@@ -15,10 +21,13 @@ import {useState} from "react";
 import {Empty} from "../../components/Empty.tsx";
 import {Section} from "../../components/Section.tsx";
 import {fmt, total, type Expense} from "../../lib/money.ts";
-import {day} from "../../lib/util.ts";
+import {colorOf} from "../../lib/util.ts";
 
 const monthLabel = (ym: string) =>
     new Date(ym + "-01T00:00").toLocaleDateString(undefined, {month: "long", year: "numeric"});
+
+const part = (d: string, opt: Intl.DateTimeFormatOptions) =>
+    new Date(d + "T00:00").toLocaleDateString(undefined, opt);
 
 // Expects newest first; groups keep that order.
 function byMonth(expenses: Expense[]): [string, Expense[]][] {
@@ -27,9 +36,11 @@ function byMonth(expenses: Expense[]): [string, Expense[]][] {
     return [...months];
 }
 
-export function ExpenseList({expenses, currency, loading, onDelete}: {
-    expenses: Expense[]; currency: string; loading: boolean; onDelete: (id: string) => void | Promise<void>
+export function ExpenseList({expenses, currency, loading, searching, onEdit, onDelete}: {
+    expenses: Expense[]; currency?: string; loading: boolean; searching?: boolean; onEdit: (e: Expense) => void; onDelete: (id: string) => void | Promise<void>
 }) {
+    const cur = (e: Expense) => e.group?.currency ?? currency;
+    const [confirm, setConfirm] = useState<Expense | null>(null);
     const [deleting, setDeleting] = useState<ReadonlySet<string>>(new Set());
     const remove = async (id: string) => {
         setDeleting((s) => new Set(s).add(id));
@@ -46,34 +57,58 @@ export function ExpenseList({expenses, currency, loading, onDelete}: {
     if (expenses.length === 0)
         return loading ? null : (
             <Section title="Expenses">
-                <Empty icon={<ReceiptLongIcon fontSize="large"/>} text="No expenses yet. Tap “Add expense”."/>
+                <Empty icon={<ReceiptLongIcon fontSize="large"/>} text={searching ? "No matching expenses." : "No expenses yet. Tap “Add expense”."}/>
             </Section>
         );
     return (
         <>
-            {byMonth(expenses).map(([ym, items]) => (
-                <Section key={ym} title={`${monthLabel(ym)} · ${fmt(total(items), currency)}`}>
+            {byMonth(expenses).map(([ym, items]) => {
+                const currencies = new Set(items.map(cur)); // a month total only makes sense in one currency
+                return (
+                <Section key={ym} title={currencies.size === 1 ? `${monthLabel(ym)} · ${fmt(total(items), cur(items[0]))}` : monthLabel(ym)}>
                     <List disablePadding>
                         {items.map((e, i) => (
                             <Box key={e.id}>
                                 {i > 0 && <Divider component="li"/>}
-                                <ListItem secondaryAction={<IconButton edge="end" aria-label={`Delete ${e.description}`}
-                                                                       disabled={deleting.has(e.id)} onClick={() => remove(e.id)}><DeleteOutlineIcon/></IconButton>}>
-                                    <ListItemAvatar>
-                                        <Avatar sx={{
-                                            bgcolor: "action.selected",
-                                            color: "text.secondary"
-                                        }}><ReceiptLongIcon/></Avatar>
-                                    </ListItemAvatar>
-                                    <ListItemText primary={e.description} secondary={day(e.date)}
-                                                  slotProps={{primary: {noWrap: true}}} sx={{minWidth: 0}}/>
-                                    <Typography fontWeight={500} sx={{mr: 4}}>{fmt(e.cents, currency)}</Typography>
+                                <ListItem disablePadding sx={{"&:hover .actions, &:focus-within .actions": {opacity: 1}}}
+                                          secondaryAction={<IconButton className="actions" size="small" edge="end" color="error" aria-label={`Delete ${e.description}`}
+                                                                       sx={{"@media (hover: hover)": {opacity: 0}}}
+                                                                       disabled={deleting.has(e.id)} onClick={() => setConfirm(e)}><DeleteOutlineIcon fontSize="small"/></IconButton>}>
+                                <ListItemButton onClick={() => onEdit(e)} aria-label={`Edit ${e.description}`} sx={{py: 0.5, px: {xs: 1.5, sm: 2}, pr: 6}}>
+                                    <Box sx={{width: 32, mr: 1.5, textAlign: "center", lineHeight: 1, color: "text.secondary"}}>
+                                        <Typography variant="caption" sx={{textTransform: "uppercase"}}>{part(e.date, {month: "short"})}</Typography>
+                                        <Typography component="div" fontWeight={500}>{part(e.date, {day: "numeric"})}</Typography>
+                                    </Box>
+                                    <ListItemText primary={e.description}
+                                                  secondary={(e.group || e.tags.length > 0) && <>
+                                                      {e.group && <Chip label={e.group.name} size="small" variant="outlined" sx={{mr: 0.5, mt: 0.25, height: 20, fontSize: 11, color: colorOf(e.groupId), borderColor: colorOf(e.groupId)}}/>}
+                                                      {e.tags.map((t) => <Chip key={t.id} label={t.name} size="small" sx={{mr: 0.5, mt: 0.25, height: 20, fontSize: 11, color: colorOf(t.id), bgcolor: `${colorOf(t.id)}22`}}/>)}
+                                                  </>}
+                                                  slotProps={{primary: {noWrap: true, fontWeight: 500}, secondary: {component: "div"}}} sx={{minWidth: 0}}/>
+                                    <Typography fontWeight={600} sx={{textAlign: "right", ml: 1, flexShrink: 0, fontVariantNumeric: "tabular-nums"}}>{fmt(e.cents, cur(e))}</Typography>
+                                </ListItemButton>
                                 </ListItem>
                             </Box>
                         ))}
                     </List>
                 </Section>
-            ))}
+                );
+            })}
+            <Dialog open={!!confirm} onClose={() => setConfirm(null)}>
+                <DialogTitle>Delete expense?</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        “{confirm?.description}” will be permanently deleted.
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions sx={{px: 3, pb: 2}}>
+                    <Button onClick={() => setConfirm(null)}>Cancel</Button>
+                    <Button color="error" variant="contained" onClick={() => {
+                        remove(confirm!.id);
+                        setConfirm(null);
+                    }}>Delete</Button>
+                </DialogActions>
+            </Dialog>
         </>
     );
 }

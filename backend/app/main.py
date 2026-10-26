@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.expenses import router as expenses_router
 from app.api.groups import router as groups_router
+from app.api.tags import router as tags_router
 from app.api.users import router as users_router
 from app.core.config import get_settings
 
@@ -19,12 +20,13 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origin_list,
     allow_credentials=False,
-    allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["Content-Type", "Authorization"],
 )
 app.include_router(users_router)
 app.include_router(groups_router)
 app.include_router(expenses_router)
+app.include_router(tags_router)
 
 
 @app.get("/health", tags=["health"])

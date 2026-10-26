@@ -17,19 +17,32 @@ from app.utils.pagination import Page, paginate
 router = APIRouter(prefix="/api/v1/groups", tags=["groups"])
 
 
+def check_currency(value: str) -> str:
+    value = value.upper()
+    if pycountry.currencies.get(alpha_3=value) is None:
+        raise ValueError("Enter a valid ISO 4217 currency code")
+    return value
+
+
 class GroupCreate(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True)
 
     name: str = Field(min_length=1, max_length=120)
     currency: str = "INR"  # ISO 4217
 
+    _check_currency = field_validator("currency")(check_currency)
+
+
+class GroupUpdate(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    name: str | None = Field(None, min_length=1, max_length=120)
+    currency: str | None = None  # relabels the amounts, nothing is converted
+
     @field_validator("currency")
     @classmethod
-    def validate_currency(cls, value: str) -> str:
-        value = value.upper()
-        if pycountry.currencies.get(alpha_3=value) is None:
-            raise ValueError("Enter a valid ISO 4217 currency code")
-        return value
+    def validate_currency(cls, value: str | None) -> str | None:
+        return value if value is None else check_currency(value)
 
 
 class GroupResponse(BaseModel):
@@ -58,6 +71,17 @@ def create_group(
 ) -> Group:
     group = Group(owner_id=user.id, name=payload.name, currency=payload.currency)
     db.add(group)
+    db.commit()
+    return group
+
+
+@router.patch("/{group_id}", response_model=GroupResponse)
+def update_group(
+    group_id: UUID, payload: GroupUpdate, user: User = Depends(get_current_user), db: Session = Depends(get_db)
+) -> Group:
+    group = get_owned_group(group_id, user, db)
+    for field, value in payload.model_dump(exclude_none=True).items():
+        setattr(group, field, value)
     db.commit()
     return group
 
@@ -91,3 +115,9 @@ def list_groups(
         for g in page["items"]
     ]
     return page
+
+
+@router.delete("/{group_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_group(group_id: UUID, user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> None:
+    db.delete(get_owned_group(group_id, user, db))  # its expenses go with it
+    db.commit()

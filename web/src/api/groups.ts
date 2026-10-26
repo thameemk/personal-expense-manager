@@ -1,4 +1,4 @@
-import {get, post, qs, type Page} from "./client.ts";
+import {del, get, patch, post, qs, type Page} from "./client.ts";
 import type {Group} from "../lib/money.ts";
 
 // the list API sends total_amount as a decimal string; the UI works in integer cents
@@ -14,3 +14,8 @@ export const listGroups = (token: string, cursor?: string) =>
 
 export const createGroup = (token: string, name: string, currency: string) =>
     post<ApiGroup>("/groups", {name, currency}, token).then(toGroup);
+
+export const updateGroup = (token: string, id: string, d: { name: string; currency: string }) =>
+    patch<ApiGroup>(`/groups/${id}`, d, token).then(toGroup);
+
+export const deleteGroup = (token: string, id: string) => del(`/groups/${id}`, token);
