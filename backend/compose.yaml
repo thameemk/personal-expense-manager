@@ -2,6 +2,8 @@ services:
   backend:
     build: .
     env_file: .env # DATABASE_URL, CORS_ORIGINS; read directly so an exported shell var can't override it
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - "${BACKEND_PORT:-8000}:8000"
     read_only: true
