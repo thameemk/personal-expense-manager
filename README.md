@@ -17,7 +17,8 @@ web/       React + Vite + TypeScript, Material UI
 ```
 
 Features: sign up / log in, expense groups, tags, an expense list with
-infinite scroll, and a profile page. A mobile client is not started.
+infinite scroll, and a profile page. The web app is an installable PWA (app
+shell cached; data needs the network). A native mobile client is not started.
 
 ## Backend
 
@@ -65,6 +66,7 @@ Open the Vite URL shown in the terminal.
 ```bash
 pnpm lint
 pnpm build   # type-checks, then builds
+pnpm preview # serve the build; the PWA service worker only runs here, not in dev
 pnpm test
 ```
 
