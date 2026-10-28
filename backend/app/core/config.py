@@ -6,6 +6,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     database_url: str
     cors_origins: str
+    allow_signup: bool = False
 
     @property
     def cors_origin_list(self) -> list[str]:
