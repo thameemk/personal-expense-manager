@@ -7,6 +7,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy.orm import Session
 
 from app.api.dependencies import get_current_session, get_current_user
+from app.core.config import get_settings
 from app.db.session import get_db
 from app.models.identity import User, UserSession
 from app.services.identity import (
@@ -58,6 +59,8 @@ class TokenResponse(BaseModel):
 
 @router.post("/users", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 def register_user(payload: UserCreate, db: Session = Depends(get_db)) -> User:
+    if not get_settings().allow_signup:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Signups are disabled")
     try:
         return register_user_service(
             db,
