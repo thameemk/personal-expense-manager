@@ -94,7 +94,7 @@ def list_groups(
     db: Session = Depends(get_db),
 ):
     stmt = select(Group).where(Group.owner_id == user.id)
-    page = paginate(db, stmt, Group.created_at, Group, cursor, limit)
+    page = paginate(db, stmt, (Group.created_at,), Group, cursor, limit)
     ids = [g.id for g in page["items"]]
     rows = (
         db.execute(

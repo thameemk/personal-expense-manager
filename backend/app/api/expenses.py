@@ -122,7 +122,7 @@ def list_expenses(
             Expense.description.icontains(q, autoescape=True)
             | Expense.tags.any(Tag.name.icontains(q, autoescape=True))
         )
-    page = paginate(db, stmt, Expense.date, Expense, cursor, limit)
+    page = paginate(db, stmt, (Expense.date, Expense.created_at), Expense, cursor, limit)
     page["items"] = [to_response(e, with_group=bool(include)) for e in page["items"]]
     return page
 
